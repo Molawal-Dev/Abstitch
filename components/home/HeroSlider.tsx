@@ -17,6 +17,7 @@ const slides = [
     cta2: { label: "Get a Quote", href: "/contact#order" },
     bg: "from-burgundy-950 via-burgundy-900 to-burgundy-800",
     image: "/home-banners/school-image.png",
+    imagePosition: "object-center",
     pattern: "school",
   },
   {
@@ -29,6 +30,7 @@ const slides = [
     cta2: { label: "Contact Us", href: "/contact" },
     bg: "from-gray-950 via-gray-900 to-gray-800",
     image: "/home-banners/embroidery-image.png",
+    imagePosition: "object-right",
     pattern: "embroidery",
   },
   {
@@ -41,6 +43,7 @@ const slides = [
     cta2: { label: "Place an Order", href: "/contact#order" },
     bg: "from-slate-950 via-slate-900 to-slate-800",
     image: "/home-banners/ppe-image.png",
+    imagePosition: "object-right",
     pattern: "safety",
   },
 ];
@@ -165,11 +168,11 @@ export default function HeroSlider() {
               src={slide.image}
               alt={slide.tag}
               fill
-              className="object-cover object-center"
+              className={`object-contain ${slide.imagePosition}`}
               priority
-              sizes="40vw"
+              sizes="(max-width: 1000px) 100vw, 50vw"
+              quality={90}
             />
-            
           </div>
         </div>
       )}
@@ -181,7 +184,7 @@ export default function HeroSlider() {
       </div>
 
       <div className="relative z-20 container-custom h-full flex items-center">
-        <div className="max-w-xl">
+        <div className="max-w-2xl">
           <div
             key={`tag-${current}`}
             className="inline-flex items-center gap-2 mb-5 animate-fade-up"
