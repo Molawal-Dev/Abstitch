@@ -1,0 +1,10 @@
+.next
+node_modules
+.env
+.env.local
+.env.production
+*.log
+.DS_Store
+out/
+build/
+scripts/products.csv
