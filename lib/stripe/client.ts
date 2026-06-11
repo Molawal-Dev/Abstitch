@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-function getStripe() {
+export function getStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("STRIPE_SECRET_KEY is not set");
   }
@@ -9,12 +9,6 @@ function getStripe() {
     typescript: true,
   });
 }
-
-export const stripe = {
-  get instance() {
-    return getStripe();
-  }
-};
 
 export function formatAmountForStripe(amount: number): number {
   return Math.round(amount * 100);

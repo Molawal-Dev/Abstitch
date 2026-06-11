@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, formatAmountForStripe } from "@/lib/stripe/client";
+import { getStripe, formatAmountForStripe } from "@/lib/stripe/client";
 import { calculateShipping } from "@/lib/utils";
 import type { CartItem, ShippingAddress } from "@/types";
 import { z } from "zod";
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}`)
       .join(", ");
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: formatAmountForStripe(total),
       currency: "gbp",
       automatic_payment_methods: { enabled: true },
