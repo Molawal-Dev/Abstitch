@@ -39,13 +39,13 @@ function mapProduct(row: any, explicitSizeGuide?: any | null) {
       hex: s.hex_code,
       images: s.images || [],
     })),
-    sizes: [
-      ...new Set(
+    sizes: Array.from(
+      new Set(
         (row.product_variants || [])
           .map((v: any) => v.size)
           .filter(Boolean)
-      ),
-    ] as string[],
+      )
+    ) as string[],
     variants: row.product_variants || [],
     size_guide: explicitSizeGuide !== undefined
       ? explicitSizeGuide
