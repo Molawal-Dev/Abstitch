@@ -162,7 +162,7 @@ export default function HeroSlider() {
       <SlidePattern type={slide.pattern} />
 
       {slide.image && (
-        <div className="absolute right-0 top-0 h-full w-1/2 z-10">
+        <div className="hidden md:block absolute right-0 top-0 h-full w-1/2 z-10">
           <div className="relative h-full w-full">
             <Image
               src={slide.image}
@@ -170,21 +170,21 @@ export default function HeroSlider() {
               fill
               className={`object-contain ${slide.imagePosition}`}
               priority
-              sizes="(max-width: 1000px) 100vw, 50vw"
+              sizes="50vw"
               quality={90}
             />
           </div>
         </div>
       )}
 
-      <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 z-0">
+      <div className="hidden md:block absolute top-0 right-0 w-1/2 h-full opacity-10 z-0">
         <div className="absolute top-10 right-10 w-64 h-64 rounded-full border border-white" />
         <div className="absolute top-20 right-20 w-48 h-48 rounded-full border border-white" />
         <div className="absolute bottom-20 right-5 w-80 h-80 rounded-full border border-white" />
       </div>
 
       <div className="relative z-20 container-custom h-full flex items-center">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl md:max-w-2xl w-full">
           <div
             key={`tag-${current}`}
             className="inline-flex items-center gap-2 mb-5 animate-fade-up"

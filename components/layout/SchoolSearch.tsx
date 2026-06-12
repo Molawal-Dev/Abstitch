@@ -112,7 +112,7 @@ export default function SchoolSearch() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+        <div className="fixed left-2 right-2 top-20 md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
             <Search size={16} className="text-gray-400 flex-shrink-0" />
             <input

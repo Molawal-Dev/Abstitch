@@ -10,7 +10,19 @@ import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-const navItems = [
+interface NavItem {
+  label: string;
+  href?: string;
+  children?: NavChild[];
+}
+
+interface NavChild {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+}
+
+const navItems: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "About Abstitch", href: "/about" },
   {
@@ -29,6 +41,7 @@ const navItems = [
   },
   {
     label: "Our Services",
+    href: "/services",
     children: [
       { label: "Embroidery", href: "/services/embroidery" },
       { label: "Printing", href: "/services/printing" },
@@ -115,23 +128,49 @@ export default function Header() {
                     onMouseEnter={() => setActiveDropdown(item.label)}
                     onMouseLeave={() => setActiveDropdown(null)}
                   >
-                    <button
-                      className={cn(
-                        "flex items-center gap-1 px-4 py-2 font-sans text-sm font-medium transition-colors rounded",
-                        activeDropdown === item.label
-                          ? "text-burgundy-800"
-                          : "text-gray-700 hover:text-burgundy-800"
+                    <div className="flex items-center">
+                      {item.href ? (
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            "px-4 py-2 font-sans text-sm font-medium transition-colors rounded",
+                            activeDropdown === item.label
+                              ? "text-burgundy-800"
+                              : "text-gray-700 hover:text-burgundy-800"
+                          )}
+                        >
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <span
+                          className={cn(
+                            "px-4 py-2 font-sans text-sm font-medium transition-colors rounded cursor-default",
+                            activeDropdown === item.label
+                              ? "text-burgundy-800"
+                              : "text-gray-700"
+                          )}
+                        >
+                          {item.label}
+                        </span>
                       )}
-                    >
-                      {item.label}
-                      <ChevronDown
-                        size={14}
+                      <button
                         className={cn(
-                          "transition-transform duration-200",
-                          activeDropdown === item.label && "rotate-180"
+                          "pr-2 py-2 font-sans text-sm font-medium transition-colors rounded",
+                          activeDropdown === item.label
+                            ? "text-burgundy-800"
+                            : "text-gray-700 hover:text-burgundy-800"
                         )}
-                      />
-                    </button>
+                        aria-label={`${item.label} menu`}
+                      >
+                        <ChevronDown
+                          size={14}
+                          className={cn(
+                            "transition-transform duration-200",
+                            activeDropdown === item.label && "rotate-180"
+                          )}
+                        />
+                      </button>
+                    </div>
 
                     {activeDropdown === item.label && (
                       <div className="absolute top-full left-0 pt-1 min-w-[220px] z-50">
@@ -288,6 +327,14 @@ export default function Header() {
                     </button>
                     {mobileExpanded === item.label && (
                       <div className="ml-4 mt-1 space-y-1">
+                        {item.href && (
+                          <Link
+                            href={item.href}
+                            className="block px-3 py-2.5 text-sm text-burgundy-800 font-semibold hover:bg-burgundy-50 rounded-md transition-colors border-b border-gray-100 mb-1"
+                          >
+                            All {item.label} →
+                          </Link>
+                        )}
                         {item.children.map((child) => (
                           <div key={child.label}>
                             <Link

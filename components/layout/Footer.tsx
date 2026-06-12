@@ -60,7 +60,7 @@ export default function Footer() {
               { label: "About Abstitch", href: "/about" },
               { label: "School Wear", href: "/shop/school-wear" },
               { label: "Garments", href: "/shop/garments" },
-              { label: "Our Services", href: "/services/embroidery" },
+              { label: "Our Services", href: "/services" },
               { label: "Contact Us", href: "/contact" },
             ].map((link) => (
               <li key={link.href}>
@@ -135,9 +135,8 @@ export default function Footer() {
 
           <div className="mt-5 p-3 bg-gray-800 rounded-lg">
             <p className="text-xs font-medium text-white mb-1">Opening Hours</p>
-            <p className="text-xs text-gray-400">Mon–Fri: 9:00am – 5:30pm</p>
-            <p className="text-xs text-gray-400">Saturday: 10:00am – 4:00pm</p>
-            <p className="text-xs text-gray-400">Sunday: Closed</p>
+            <p className="text-xs text-gray-400">Mon–Fri: 9:00am – 5:00pm</p>
+            <p className="text-xs text-gray-400">Saturday and Sunday: Closed</p>
           </div>
         </div>
       </div>

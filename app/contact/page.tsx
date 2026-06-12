@@ -103,9 +103,8 @@ export default function ContactPage() {
               <div className="bg-burgundy-50 rounded-xl p-5">
                 <h3 className="font-serif font-bold text-gray-900 mb-3">Opening Hours</h3>
                 {[
-                  ["Monday – Friday", "9:00am – 5:30pm"],
-                  ["Saturday", "10:00am – 4:00pm"],
-                  ["Sunday", "Closed"],
+                  ["Monday – Friday", "9:00am – 5:00pm"],
+                  ["Saturday and Sunday", "Closed"],
                 ].map(([day, hours]) => (
                   <div key={day} className="flex justify-between font-sans text-sm py-1.5 border-b border-burgundy-100 last:border-0">
                     <span className="text-gray-600">{day}</span>
