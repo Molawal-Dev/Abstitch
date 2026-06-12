@@ -1,12 +1,23 @@
+import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
-const categories = [
+const categories: {
+  title: string;
+  subtitle: string;
+  href: string;
+  bg: string;
+  image: string;
+  icon: React.ReactNode;
+  stats: string;
+}[] = [
   {
     title: "Primary Schools",
     subtitle: "Uniforms for Aberdeen's primary schools — embroidered with your school crest",
     href: "/shop/school-wear/primary-schools",
     bg: "from-burgundy-800 to-burgundy-950",
+    image: "/images/primary-schools.jpg",
     icon: (
       <svg viewBox="0 0 80 80" className="w-20 h-20 opacity-20" fill="white">
         <rect x="10" y="30" width="60" height="40" rx="3"/>
@@ -23,6 +34,7 @@ const categories = [
     subtitle: "Secondary & academy school uniforms — blazers, ties, PE kits and more",
     href: "/shop/school-wear/academy-schools",
     bg: "from-slate-800 to-slate-950",
+    image: "/images/academy-schools.jpg",
     icon: (
       <svg viewBox="0 0 80 80" className="w-20 h-20 opacity-20" fill="white">
         <rect x="8" y="28" width="64" height="44" rx="3"/>
@@ -56,26 +68,33 @@ export default function HomeSchoolWearSection() {
             <Link
               key={cat.title}
               href={cat.href}
-              className={`group relative bg-gradient-to-br ${cat.bg} rounded-2xl overflow-hidden p-8 text-white flex flex-col justify-between min-h-[260px] transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl`}
+              className="group relative rounded-2xl overflow-hidden flex flex-col justify-end min-h-[280px] transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl"
             >
-              <div className="absolute top-6 right-6">{cat.icon}</div>
+              <Image
+                src={cat.image}
+                alt={cat.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
 
-              <div>
-                <span className="inline-block font-sans text-xs tracking-widest uppercase bg-white/20 px-3 py-1 rounded-full mb-4">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+
+              <div className="relative z-10 p-7">
+                <span className="inline-block font-sans text-xs tracking-widest uppercase bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full mb-4 text-white">
                   {cat.stats}
                 </span>
-                <h3 className="font-serif text-3xl font-bold mb-3">{cat.title}</h3>
-                <p className="font-sans text-sm text-white/80 leading-relaxed max-w-[280px]">
+                <h3 className="font-serif text-3xl font-bold text-white mb-2">
+                  {cat.title}
+                </h3>
+                <p className="font-sans text-sm text-white/80 leading-relaxed mb-5">
                   {cat.subtitle}
                 </p>
+                <div className="flex items-center gap-2 font-sans font-bold text-sm text-white group-hover:gap-3 transition-all">
+                  Browse {cat.title === "Primary Schools" ? "Schools" : "Academies"}
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-
-              <div className="flex items-center gap-2 mt-6 font-sans font-semibold text-sm group-hover:gap-3 transition-all">
-                Browse {cat.title}
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-
-              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors rounded-2xl" />
             </Link>
           ))}
         </div>

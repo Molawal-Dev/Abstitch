@@ -5,6 +5,8 @@ import ProductDetail from "@/components/product/ProductDetail";
 import RelatedProducts from "@/components/product/RelatedProducts";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+export const revalidate = 0;
+
 interface Props {
   params: { slug: string };
 }

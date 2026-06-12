@@ -8,6 +8,8 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
+export const revalidate = 0;
+
 interface Props {
   params: { school: string };
   searchParams: { page?: string; sort?: string; in_stock?: string };
