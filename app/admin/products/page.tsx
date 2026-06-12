@@ -42,6 +42,9 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDuplicating, setBulkDuplicating] = useState(false);
 
   const confirm = useConfirm();
   const { success, error } = useToast();
@@ -133,6 +136,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts(search, page, selectedCategory);
+    setSelectedIds([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, selectedCategory]);
 
@@ -192,6 +196,119 @@ export default function AdminProductsPage() {
     }
   };
 
+  const duplicateProductCore = async (product: ProductRow) => {
+    const { data: full } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", product.id)
+      .single();
+
+    if (!full) throw new Error("Could not fetch product");
+
+    const newSlug = `${full.slug}-copy-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    const newName = `${full.name} (Copy)`;
+    const newSku = full.sku ? `${full.sku}-COPY` : null;
+
+    const { data: newProduct, error: insertError } = await supabase
+      .from("products")
+      .insert({
+        name: newName,
+        slug: newSlug,
+        type: full.type,
+        sku: newSku,
+        short_description: full.short_description,
+        description: full.description,
+        regular_price: full.regular_price,
+        sale_price: full.sale_price,
+        price_range_min: full.price_range_min,
+        price_range_max: full.price_range_max,
+        images: full.images,
+        in_stock: full.in_stock,
+        stock_qty: full.stock_qty,
+        featured: false,
+        published: false,
+        wc_id: null,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !newProduct) throw insertError;
+
+    const newId = newProduct.id;
+
+    const { data: cats } = await supabase
+      .from("product_categories")
+      .select("category_id")
+      .eq("product_id", product.id);
+
+    if (cats?.length) {
+      await supabase.from("product_categories").insert(
+        cats.map((c) => ({ product_id: newId, category_id: c.category_id }))
+      );
+    }
+
+    const { data: swatches } = await supabase
+      .from("product_color_swatches")
+      .select("*")
+      .eq("product_id", product.id);
+
+    if (swatches?.length) {
+      await supabase.from("product_color_swatches").insert(
+        swatches.map((s) => ({
+          product_id: newId,
+          color_name: s.color_name,
+          hex_code: s.hex_code,
+          images: s.images,
+          position: s.position,
+        }))
+      );
+    }
+
+    const { data: variants } = await supabase
+      .from("product_variants")
+      .select("*")
+      .eq("product_id", product.id);
+
+    if (variants?.length) {
+      const variantBatches = variants.map((v) => ({
+        product_id: newId,
+        color: v.color,
+        color_hex: v.color_hex,
+        size: v.size,
+        price: v.price,
+        sale_price: v.sale_price,
+        sku: v.sku ? `${v.sku}-COPY` : null,
+        in_stock: v.in_stock,
+        stock_qty: v.stock_qty,
+        images: v.images,
+        position: v.position,
+      }));
+      for (let i = 0; i < variantBatches.length; i += 100) {
+        await supabase
+          .from("product_variants")
+          .insert(variantBatches.slice(i, i + 100));
+      }
+    }
+
+    const { data: sizeGuide } = await supabase
+      .from("size_guides")
+      .select("*")
+      .eq("product_id", product.id)
+      .maybeSingle();
+
+    if (sizeGuide) {
+      await supabase.from("size_guides").insert({
+        product_id: newId,
+        title: sizeGuide.title,
+        headers: sizeGuide.headers,
+        rows: sizeGuide.rows,
+        notes: sizeGuide.notes,
+      });
+    }
+
+    return newName;
+  };
+
   const handleDuplicate = async (product: ProductRow) => {
     const confirmed = await confirm({
       title: "Duplicate Product",
@@ -205,125 +322,101 @@ export default function AdminProductsPage() {
     setDuplicating(product.id);
 
     try {
-      const { data: full } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", product.id)
-        .single();
-
-      if (!full) throw new Error("Could not fetch product");
-
-      const newSlug = `${full.slug}-copy-${Date.now().toString(36)}`;
-      const newName = `${full.name} (Copy)`;
-      const newSku = full.sku ? `${full.sku}-COPY` : null;
-
-      const { data: newProduct, error: insertError } = await supabase
-        .from("products")
-        .insert({
-          name: newName,
-          slug: newSlug,
-          type: full.type,
-          sku: newSku,
-          short_description: full.short_description,
-          description: full.description,
-          regular_price: full.regular_price,
-          sale_price: full.sale_price,
-          price_range_min: full.price_range_min,
-          price_range_max: full.price_range_max,
-          images: full.images,
-          in_stock: full.in_stock,
-          stock_qty: full.stock_qty,
-          featured: false,
-          published: false,
-          wc_id: null,
-        })
-        .select("id")
-        .single();
-
-      if (insertError || !newProduct) throw insertError;
-
-      const newId = newProduct.id;
-
-      const { data: cats } = await supabase
-        .from("product_categories")
-        .select("category_id")
-        .eq("product_id", product.id);
-
-      if (cats?.length) {
-        await supabase.from("product_categories").insert(
-          cats.map((c) => ({ product_id: newId, category_id: c.category_id }))
-        );
-      }
-
-      const { data: swatches } = await supabase
-        .from("product_color_swatches")
-        .select("*")
-        .eq("product_id", product.id);
-
-      if (swatches?.length) {
-        await supabase.from("product_color_swatches").insert(
-          swatches.map((s) => ({
-            product_id: newId,
-            color_name: s.color_name,
-            hex_code: s.hex_code,
-            images: s.images,
-            position: s.position,
-          }))
-        );
-      }
-
-      const { data: variants } = await supabase
-        .from("product_variants")
-        .select("*")
-        .eq("product_id", product.id);
-
-      if (variants?.length) {
-        const variantBatches = variants.map((v) => ({
-          product_id: newId,
-          color: v.color,
-          color_hex: v.color_hex,
-          size: v.size,
-          price: v.price,
-          sale_price: v.sale_price,
-          sku: v.sku ? `${v.sku}-COPY` : null,
-          in_stock: v.in_stock,
-          stock_qty: v.stock_qty,
-          images: v.images,
-          position: v.position,
-        }));
-        for (let i = 0; i < variantBatches.length; i += 100) {
-          await supabase
-            .from("product_variants")
-            .insert(variantBatches.slice(i, i + 100));
-        }
-      }
-
-      const { data: sizeGuide } = await supabase
-        .from("size_guides")
-        .select("*")
-        .eq("product_id", product.id)
-        .maybeSingle();
-
-      if (sizeGuide) {
-        await supabase.from("size_guides").insert({
-          product_id: newId,
-          title: sizeGuide.title,
-          headers: sizeGuide.headers,
-          rows: sizeGuide.rows,
-          notes: sizeGuide.notes,
-        });
-      }
-
+      const newName = await duplicateProductCore(product);
       await fetchProducts(search, 1, selectedCategory);
       setPage(1);
-      success(
-        `"${newName}" duplicated as a draft — it's now at the top of the list.`
-      );
+      success(`"${newName}" duplicated as a draft — it's now at the top of the list.`);
     } catch (err) {
       console.error(err);
       error("Failed to duplicate product. Please try again.");
     } finally {
       setDuplicating(null);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === products.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(products.map((p) => p.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const confirmed = await confirm({
+      title: "Delete Selected Products",
+      message: `Are you sure you want to delete ${selectedIds.length} product${selectedIds.length !== 1 ? "s" : ""}? This action cannot be undone and will remove all variants, images, and size guides associated with these products.`,
+      confirmLabel: "Yes, Delete All",
+      cancelLabel: "Cancel",
+      variant: "danger",
+      icon: "delete",
+    });
+    if (!confirmed) return;
+
+    setBulkDeleting(true);
+    try {
+      const { error: err } = await supabase
+        .from("products")
+        .delete()
+        .in("id", selectedIds);
+
+      if (err) {
+        error("Failed to delete selected products.");
+      } else {
+        success(`${selectedIds.length} product${selectedIds.length !== 1 ? "s" : ""} deleted successfully.`);
+        setSelectedIds([]);
+        fetchProducts(search, page, selectedCategory);
+      }
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const handleBulkDuplicate = async () => {
+    const confirmed = await confirm({
+      title: "Duplicate Selected Products",
+      message: `This will create ${selectedIds.length} draft cop${selectedIds.length !== 1 ? "ies" : "y"} of the selected product${selectedIds.length !== 1 ? "s" : ""}. You can edit and publish each one when ready.`,
+      confirmLabel: "Yes, Duplicate All",
+      cancelLabel: "Cancel",
+      variant: "info",
+      icon: "duplicate",
+    });
+    if (!confirmed) return;
+
+    setBulkDuplicating(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
+
+      for (const product of selectedProducts) {
+        try {
+          await duplicateProductCore(product);
+          successCount++;
+        } catch (err) {
+          console.error(err);
+          failCount++;
+        }
+      }
+
+      setSelectedIds([]);
+      await fetchProducts(search, 1, selectedCategory);
+      setPage(1);
+
+      if (failCount === 0) {
+        success(`${successCount} product${successCount !== 1 ? "s" : ""} duplicated as drafts — now at the top of the list.`);
+      } else {
+        error(`${successCount} duplicated, ${failCount} failed. Please try again for the failed ones.`);
+      }
+    } finally {
+      setBulkDuplicating(false);
     }
   };
 
@@ -461,11 +554,59 @@ export default function AdminProductsPage() {
             </div>
           )}
 
+          {selectedIds.length > 0 && (
+            <div className="flex items-center justify-between bg-burgundy-50 border border-burgundy-200 rounded-xl px-4 py-3 mb-4">
+              <span className="font-sans text-sm font-medium text-burgundy-800">
+                {selectedIds.length} product{selectedIds.length !== 1 ? "s" : ""} selected
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedIds([])}
+                  className="font-sans text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Clear selection
+                </button>
+                <button
+                  onClick={handleBulkDuplicate}
+                  disabled={bulkDuplicating || bulkDeleting}
+                  className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-sans text-xs font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {bulkDuplicating ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Copy size={14} />
+                  )}
+                  Duplicate Selected
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting || bulkDuplicating}
+                  className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-sans text-xs font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {bulkDeleting ? (
+                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 size={14} />
+                  )}
+                  Delete Selected
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Table */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <table className="w-full min-w-[750px]">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-left w-10">
+                    <input
+                      type="checkbox"
+                      checked={products.length > 0 && selectedIds.length === products.length}
+                      onChange={toggleSelectAll}
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-burgundy-800 focus:ring-burgundy-800"
+                    />
+                  </th>
                   {[
                     "Product",
                     "Type",
@@ -487,7 +628,7 @@ export default function AdminProductsPage() {
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 6 }).map((_, j) => (
+                      {Array.from({ length: 7 }).map((_, j) => (
                         <td key={j} className="px-4 py-3">
                           <div className="h-4 bg-gray-100 rounded animate-pulse" />
                         </td>
@@ -497,7 +638,7 @@ export default function AdminProductsPage() {
                 ) : products.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-12 text-center"
                     >
                       <p className="font-sans text-sm text-gray-400 mb-2">
@@ -519,8 +660,16 @@ export default function AdminProductsPage() {
                   products.map((p) => (
                     <tr
                       key={p.id}
-                      className="hover:bg-gray-50 transition-colors"
+                      className={`hover:bg-gray-50 transition-colors ${selectedIds.includes(p.id) ? "bg-burgundy-50/50" : ""}`}
                     >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(p.id)}
+                          onChange={() => toggleSelect(p.id)}
+                          className="w-3.5 h-3.5 rounded border-gray-300 text-burgundy-800 focus:ring-burgundy-800"
+                        />
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">

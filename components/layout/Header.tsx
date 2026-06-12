@@ -76,7 +76,7 @@ export default function Header() {
       <div className="bg-burgundy-800 text-white text-xs py-2 hidden md:block">
         <div className="container-custom flex justify-between items-center">
           <span className="opacity-80">
-            Over 50 years of quality school wear &amp; embroidery in Aberdeen
+            Over 20 years of quality school wear &amp; embroidery in Aberdeen
           </span>
           <div className="flex items-center gap-6">
             <a
