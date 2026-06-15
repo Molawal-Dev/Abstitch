@@ -24,6 +24,7 @@ import type { Product } from "@/types";
 
 interface ProductDetailProps {
   product: Product;
+  schoolSlug?: string;
 }
 
 function normaliseRichHtml(html: string): string {
@@ -44,7 +45,7 @@ function normaliseRichHtml(html: string): string {
   return out;
 }
 
-export default function ProductDetail({ product }: ProductDetailProps) {
+export default function ProductDetail({ product, schoolSlug }: ProductDetailProps) {
   const { addItem } = useCart();
   const { success, error } = useToast();
 
@@ -93,6 +94,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       error("Please select a size before adding to cart.");
       return;
     }
+    
+    const schoolCategoryName = schoolSlug
+      ? product.category_names?.[
+          product.categories.findIndex((c) => c === schoolSlug)
+        ] || null
+      : null;
+
     addItem({
       product_id: product.id,
       variant_id: activeVariant?.id || null,
@@ -103,6 +111,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       size: selectedSize,
       price: displaySalePrice ?? displayPrice ?? 0,
       quantity: selectedQty,
+      school: schoolCategoryName,
     });
     setAddedToCart(true);
     success(`${product.name} added to cart!`);

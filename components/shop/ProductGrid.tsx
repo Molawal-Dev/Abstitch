@@ -4,11 +4,13 @@ import type { Product } from "@/types";
 interface ProductGridProps {
   products: Product[];
   emptyMessage?: string;
+  schoolSlug?: string;
 }
 
 export default function ProductGrid({
   products,
   emptyMessage = "No products found.",
+  schoolSlug,
 }: ProductGridProps) {
   if (!products.length) {
     return (
@@ -21,7 +23,7 @@ export default function ProductGrid({
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} schoolSlug={schoolSlug} />
       ))}
     </div>
   );

@@ -50,6 +50,27 @@ function mapProduct(row: any) {
   };
 }
 
+// These are parent/generic category slugs — we skip them
+// and only use specific school/item categories for related products
+const GENERIC_SLUGS = new Set([
+  "school-wear",
+  "garments",
+  "primary-schools",
+  "academy-schools",
+  "safety-wear",
+  "bags",
+  "blazers",
+  "gifts",
+  "gloves",
+  "head-wear",
+  "hoodies",
+  "shirts",
+  "sweaters",
+  "zoodies",
+  "uncategorized",
+  "coveralls",
+]);
+
 export default async function RelatedProducts({
   productId,
   categoryIds,
@@ -58,28 +79,55 @@ export default async function RelatedProducts({
   try {
     const supabase = createServerSupabaseClient();
 
-    const lookupSlug = schoolSlug || categoryIds[0];
-    if (!lookupSlug) return null;
+    // Build list of slugs to try, in priority order:
+    // 1. schoolSlug passed from product page (most specific)
+    // 2. All non-generic categoryIds the product belongs to
+    const candidateSlugs: string[] = [];
 
-    const { data: cat } = await supabase
+    if (schoolSlug && !GENERIC_SLUGS.has(schoolSlug)) {
+      candidateSlugs.push(schoolSlug);
+    }
+
+    for (const slug of categoryIds) {
+      if (!GENERIC_SLUGS.has(slug) && !candidateSlugs.includes(slug)) {
+        candidateSlugs.push(slug);
+      }
+    }
+
+    if (!candidateSlugs.length) return null;
+
+    // Look up all candidate category IDs at once
+    const { data: catRows } = await supabase
       .from("categories")
-      .select("id")
-      .eq("slug", lookupSlug)
-      .single();
+      .select("id, slug")
+      .in("slug", candidateSlugs);
 
-    if (!cat) return null;
+    if (!catRows?.length) return null;
 
-    const { data: pcData } = await supabase
-      .from("product_categories")
-      .select("product_id")
-      .eq("category_id", cat.id);
+    // Try each category in priority order until we find related products
+    let relatedProductIds: string[] = [];
+    let usedCategorySlug = "";
 
-    const productIds = (pcData || [])
-      .map((pc: { product_id: string }) => pc.product_id)
-      .filter((id: string) => id !== productId);
+    for (const cat of catRows) {
+      const { data: pcData } = await supabase
+        .from("product_categories")
+        .select("product_id")
+        .eq("category_id", cat.id);
 
-    if (!productIds.length) return null;
+      const ids = (pcData || [])
+        .map((pc: { product_id: string }) => pc.product_id)
+        .filter((id: string) => id !== productId);
 
+      if (ids.length > 0) {
+        relatedProductIds = ids;
+        usedCategorySlug = cat.slug;
+        break;
+      }
+    }
+
+    if (!relatedProductIds.length) return null;
+
+    // Fetch the related products
     const { data } = await supabase
       .from("products")
       .select(`
@@ -90,10 +138,20 @@ export default async function RelatedProducts({
         size_guides(*)
       `)
       .eq("published", true)
-      .in("id", productIds)
+      .in("id", relatedProductIds)
+      .order("created_at", { ascending: false })
       .limit(8);
 
-    if (!data || !data.length) return null;
+    if (!data?.length) return null;
+
+    // Find the category name for the section heading
+    const { data: usedCat } = await supabase
+      .from("categories")
+      .select("name")
+      .eq("slug", usedCategorySlug)
+      .single();
+
+    const sectionLabel = usedCat?.name || "This School";
 
     const products = data.map(mapProduct);
 
@@ -101,7 +159,7 @@ export default async function RelatedProducts({
       <section>
         <div className="flex items-center gap-4 mb-6">
           <h2 className="font-serif text-2xl font-bold text-gray-900">
-            More From This School
+            More From {sectionLabel}
           </h2>
           <div className="flex-1 h-px bg-gray-100" />
         </div>

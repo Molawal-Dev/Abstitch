@@ -9,6 +9,7 @@ export const revalidate = 0;
 
 interface Props {
   params: { slug: string };
+  searchParams: { school?: string };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,14 +105,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const product = await getProduct(params.slug);
   if (!product) notFound();
 
   return (
     <SiteLayout>
       <div className="container-custom py-10 md:py-14">
-        <ProductDetail product={product} />
+        <ProductDetail product={product} schoolSlug={searchParams.school} />
         <div className="mt-16">
           <RelatedProducts
             productId={product.id}

@@ -11,9 +11,14 @@ import type { Product } from "@/types";
 
 interface ProductCardProps {
   product: Product;
+  schoolSlug?: string;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, schoolSlug }: ProductCardProps) {
+  const productHref = schoolSlug
+    ? `/product/${product.slug}?school=${schoolSlug}`
+    : `/product/${product.slug}`;
+
   const router = useRouter();
   const { addItem, removeItem, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
@@ -50,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group relative bg-white rounded-lg border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
-      <Link href={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden bg-gray-50">
+      <Link href={productHref} className="block relative aspect-square overflow-hidden bg-gray-50">
         <Image
           src={mainImage}
           alt={product.name}
@@ -94,13 +99,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       <div className="p-3 flex flex-col flex-1">
-        {product.category_names?.[0] && (
-          <p className="font-sans text-[10px] uppercase tracking-widest text-burgundy-700 mb-1 truncate">
-            {product.category_names[0]}
-          </p>
-        )}
-
-        <Link href={`/product/${product.slug}`}>
+        <Link href={productHref}>
           <h3 className="font-sans text-sm font-semibold text-gray-800 leading-snug mb-2 line-clamp-2 hover:text-burgundy-800 transition-colors">
             {product.name}
           </h3>
@@ -142,7 +141,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {product.in_stock && (
             <Link
-              href={`/product/${product.slug}`}
+              href={productHref}
               className="p-2 bg-burgundy-800 text-white rounded hover:bg-burgundy-900 transition-colors"
               aria-label={`View ${product.name}`}
             >

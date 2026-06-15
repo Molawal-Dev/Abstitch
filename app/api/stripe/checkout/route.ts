@@ -16,6 +16,7 @@ const bodySchema = z.object({
       size: z.string().nullable(),
       price: z.number(),
       quantity: z.number().int().positive(),
+      school: z.string().nullable().optional(),
     })),
     total: z.number(),
     item_count: z.number(),
@@ -57,6 +58,18 @@ export async function POST(req: NextRequest) {
       .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}`)
       .join(", ");
 
+    // Stripe metadata values are capped at 500 chars each, so cart items are
+    // JSON-stringified and chunked across multiple metadata keys if needed.
+    const cartItemsJson = JSON.stringify(cart.items);
+    const CHUNK_SIZE = 480;
+    const cartItemChunks: Record<string, string> = {};
+    for (let i = 0; i < Math.ceil(cartItemsJson.length / CHUNK_SIZE); i++) {
+      cartItemChunks[`cart_items_json_${i}`] = cartItemsJson.substring(
+        i * CHUNK_SIZE,
+        (i + 1) * CHUNK_SIZE
+      );
+    }
+
     const paymentIntent = await getStripe().paymentIntents.create({
       amount: formatAmountForStripe(total),
       currency: "gbp",
@@ -68,6 +81,8 @@ export async function POST(req: NextRequest) {
         customer_phone: shippingAddress.phone,
         shipping_address: JSON.stringify(shippingAddress),
         cart_items: lineItemsDescription.substring(0, 500),
+        cart_items_json_chunks: String(Object.keys(cartItemChunks).length),
+        ...cartItemChunks,
         subtotal: subtotal.toFixed(2),
         shipping: shipping.toFixed(2),
         total: total.toFixed(2),

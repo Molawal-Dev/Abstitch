@@ -5,7 +5,7 @@ import {
   sendOrderConfirmationToCustomer,
   sendNewOrderNotificationToAdmin,
 } from "@/lib/email/templates";
-import type { ShippingAddress, OrderItem } from "@/types";
+import type { ShippingAddress, OrderItem, CartItem } from "@/types";
 import type Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
@@ -55,24 +55,20 @@ async function handlePaymentSuccess(intent: Stripe.PaymentIntent) {
     return;
   }
 
-  const cartItemsRaw: {
-    product_id: string;
-    variant_id: string | null;
-    name: string;
-    slug: string;
-    image: string;
-    color: string | null;
-    size: string | null;
-    price: number;
-    quantity: number;
-  }[] = [];
+  const cartItemsRaw: CartItem[] = [];
 
   try {
-    // We stored a short description but need full items — stored in payment intent metadata
-    // In production, you'd store the full cart in a temporary session or pass via metadata
-    // For now we'll create a basic order record
-  } catch {
-    // ignore
+    const chunkCount = parseInt(meta.cart_items_json_chunks || "0", 10);
+    if (chunkCount > 0) {
+      let json = "";
+      for (let i = 0; i < chunkCount; i++) {
+        json += meta[`cart_items_json_${i}`] || "";
+      }
+      const parsedItems = JSON.parse(json) as CartItem[];
+      cartItemsRaw.push(...parsedItems);
+    }
+  } catch (err) {
+    console.error("Failed to parse cart items from metadata:", err);
   }
 
   const subtotal = parseFloat(meta.subtotal || "0");
@@ -100,11 +96,41 @@ async function handlePaymentSuccess(intent: Stripe.PaymentIntent) {
     return;
   }
 
+  // Create order_items rows so each item retains its school context
+  let orderItems: OrderItem[] = [];
+  if (cartItemsRaw.length > 0) {
+    const itemsToInsert = cartItemsRaw.map((item) => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      product_name: item.name,
+      product_slug: item.slug,
+      variant_id: item.variant_id,
+      color: item.color,
+      size: item.size,
+      image: item.image,
+      price: item.price,
+      quantity: item.quantity,
+      subtotal: item.price * item.quantity,
+      school: item.school || null,
+    }));
+
+    const { data: insertedItems, error: itemsError } = await supabase
+      .from("order_items")
+      .insert(itemsToInsert)
+      .select("*");
+
+    if (itemsError) {
+      console.error("Failed to create order items:", itemsError);
+    } else {
+      orderItems = insertedItems as OrderItem[];
+    }
+  }
+
   // Send emails
   try {
     const fullOrder = {
       ...order,
-      items: [],
+      items: orderItems,
     };
 
     await Promise.all([

@@ -83,6 +83,7 @@ export interface CartItem {
   size: string | null;
   price: number;
   quantity: number;
+  school?: string | null;
 }
 
 export interface Cart {
@@ -111,6 +112,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   subtotal: number;
+  school?: string | null;
 }
 
 export interface ShippingAddress {

@@ -227,7 +227,7 @@ export default async function SchoolProductsPage({
           <div className="flex-1 min-w-0">
             {products.length > 0 ? (
               <>
-                <ProductGrid products={products} />
+                <ProductGrid products={products} schoolSlug={category.slug} />
                 {totalPages > 1 && (
                   <div className="mt-10">
                     <ShopPagination
