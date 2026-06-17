@@ -20,23 +20,49 @@ export const orderEnquirySchema = z.object({
   additional_notes: z.string().max(2000).optional(),
 });
 
-export const checkoutSchema = z.object({
-  first_name: z.string().min(1, "First name is required").max(50),
-  last_name: z.string().min(1, "Last name is required").max(50),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(7, "Please enter a valid phone number").max(20),
-  address_line_1: z.string().min(5, "Address is required").max(200),
-  address_line_2: z.string().max(200).optional(),
-  city: z.string().min(2, "City is required").max(100),
-  county: z.string().max(100).optional(),
-  postcode: z
-    .string()
-    .min(5, "Please enter a valid postcode")
-    .max(10)
-    .regex(/^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i, "Invalid UK postcode"),
-  country: z.string().min(1, "Country is required"),
-  notes: z.string().max(500).optional(),
-});
+export const checkoutSchema = z
+  .object({
+    fulfilment: z.enum(["delivery", "collection"]),
+    first_name: z.string().min(1, "First name is required").max(50),
+    last_name: z.string().min(1, "Last name is required").max(50),
+    email: z.string().email("Please enter a valid email address"),
+    phone: z.string().min(7, "Please enter a valid phone number").max(20),
+    address_line_1: z.string().max(200).optional().or(z.literal("")),
+    address_line_2: z.string().max(200).optional(),
+    city: z.string().max(100).optional().or(z.literal("")),
+    county: z.string().max(100).optional(),
+    postcode: z.string().max(10).optional().or(z.literal("")),
+    country: z.string(),
+    notes: z.string().max(500).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.fulfilment !== "delivery") return;
+
+    if (!data.address_line_1 || data.address_line_1.length < 5) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["address_line_1"],
+        message: "Address is required",
+      });
+    }
+    if (!data.city || data.city.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["city"],
+        message: "City is required",
+      });
+    }
+    if (
+      !data.postcode ||
+      !/^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i.test(data.postcode)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["postcode"],
+        message: data.postcode ? "Invalid UK postcode" : "Postcode is required",
+      });
+    }
+  });
 
 export const adminLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),

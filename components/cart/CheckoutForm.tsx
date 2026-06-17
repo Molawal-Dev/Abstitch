@@ -2,6 +2,7 @@
 
 import type { UseFormReturn } from "react-hook-form";
 import type { CheckoutValues } from "@/lib/validations";
+import { MapPin } from "lucide-react";
 
 interface CheckoutFormProps {
   form: UseFormReturn<CheckoutValues>;
@@ -10,7 +11,9 @@ interface CheckoutFormProps {
 }
 
 export default function CheckoutForm({ form, onSubmit, loading }: CheckoutFormProps) {
-  const { register, handleSubmit, formState: { errors } } = form;
+  const { register, handleSubmit, watch, formState: { errors } } = form;
+  const fulfilment = watch("fulfilment");
+  const isDelivery = fulfilment === "delivery";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -40,38 +43,59 @@ export default function CheckoutForm({ form, onSubmit, loading }: CheckoutFormPr
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="font-serif text-lg font-bold text-gray-900 mb-5">Delivery Address</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="label">Address Line 1 *</label>
-            <input {...register("address_line_1")} className="input-field" placeholder="123 High Street" />
-            {errors.address_line_1 && <p className="text-red-500 text-xs mt-1">{errors.address_line_1.message}</p>}
-          </div>
-          <div>
-            <label className="label">Address Line 2</label>
-            <input {...register("address_line_2")} className="input-field" placeholder="Flat 4 (optional)" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {isDelivery ? (
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <h2 className="font-serif text-lg font-bold text-gray-900 mb-5">Delivery Address</h2>
+          <div className="space-y-4">
             <div>
-              <label className="label">City / Town *</label>
-              <input {...register("city")} className="input-field" placeholder="Aberdeen" />
-              {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
+              <label className="label">Address Line 1 *</label>
+              <input {...register("address_line_1")} className="input-field" placeholder="123 High Street" />
+              {errors.address_line_1 && <p className="text-red-500 text-xs mt-1">{errors.address_line_1.message}</p>}
             </div>
             <div>
-              <label className="label">County</label>
-              <input {...register("county")} className="input-field" placeholder="Aberdeenshire (optional)" />
+              <label className="label">Address Line 2</label>
+              <input {...register("address_line_2")} className="input-field" placeholder="Flat 4 (optional)" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="label">City / Town *</label>
+                <input {...register("city")} className="input-field" placeholder="Aberdeen" />
+                {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
+              </div>
+              <div>
+                <label className="label">County</label>
+                <input {...register("county")} className="input-field" placeholder="Aberdeenshire (optional)" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="label">Postcode *</label>
+                <input {...register("postcode")} className="input-field" placeholder="AB10 1AA" />
+                {errors.postcode && <p className="text-red-500 text-xs mt-1">{errors.postcode.message}</p>}
+              </div>
+              <div>
+                <label className="label">Country</label>
+                <input {...register("country")} className="input-field" readOnly />
+              </div>
+            </div>
+            <div>
+              <label className="label">Order Notes</label>
+              <textarea {...register("notes")} className="input-field resize-none" rows={3} placeholder="Any special instructions (optional)" />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <h2 className="font-serif text-lg font-bold text-gray-900 mb-5">Collection Details</h2>
+          <div className="flex gap-3 p-4 bg-burgundy-50 border border-burgundy-100 rounded-lg mb-4">
+            <MapPin size={18} className="text-burgundy-800 flex-shrink-0 mt-0.5" />
             <div>
-              <label className="label">Postcode *</label>
-              <input {...register("postcode")} className="input-field" placeholder="AB10 1AA" />
-              {errors.postcode && <p className="text-red-500 text-xs mt-1">{errors.postcode.message}</p>}
-            </div>
-            <div>
-              <label className="label">Country</label>
-              <input {...register("country")} className="input-field" readOnly />
+              <p className="font-sans text-sm font-semibold text-gray-800">
+                Collect from our Aberdeen store
+              </p>
+              <p className="font-sans text-xs text-gray-500 mt-0.5">
+                We&apos;ll email you once your order is ready for collection. No delivery address needed.
+              </p>
             </div>
           </div>
           <div>
@@ -79,7 +103,7 @@ export default function CheckoutForm({ form, onSubmit, loading }: CheckoutFormPr
             <textarea {...register("notes")} className="input-field resize-none" rows={3} placeholder="Any special instructions (optional)" />
           </div>
         </div>
-      </div>
+      )}
 
       <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
         {loading ? (

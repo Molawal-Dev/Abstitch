@@ -1,10 +1,15 @@
 import Image from "next/image";
-import { formatPrice, calculateShipping, SHIPPING_THRESHOLD } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import type { Cart } from "@/types";
 
-export default function OrderSummary({ cart }: { cart: Cart }) {
-  const shipping = calculateShipping(cart.total);
-  const total = cart.total + shipping;
+interface OrderSummaryProps {
+  cart: Cart;
+  fulfilment: "delivery" | "collection";
+  deliveryFee: number;
+}
+
+export default function OrderSummary({ cart, fulfilment, deliveryFee }: OrderSummaryProps) {
+  const total = cart.total + deliveryFee;
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-6 sticky top-24">
@@ -50,14 +55,13 @@ export default function OrderSummary({ cart }: { cart: Cart }) {
           <span>{formatPrice(cart.total)}</span>
         </div>
         <div className="flex justify-between font-sans text-sm">
-          <span className="text-gray-600">Shipping</span>
-          <span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span>
+          <span className="text-gray-600">
+            {fulfilment === "collection" ? "In-Store Collection" : "Delivery"}
+          </span>
+          <span className={deliveryFee === 0 ? "text-emerald-600 font-medium" : ""}>
+            {deliveryFee === 0 ? "Free" : formatPrice(deliveryFee)}
+          </span>
         </div>
-        {cart.total < SHIPPING_THRESHOLD && (
-          <p className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1.5 rounded font-sans">
-            Add {formatPrice(SHIPPING_THRESHOLD - cart.total)} more for free shipping
-          </p>
-        )}
       </div>
 
       <div className="border-t border-gray-100 mt-4 pt-4">

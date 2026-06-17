@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStripe, formatAmountForStripe } from "@/lib/stripe/client";
+import { getStripe } from "@/lib/stripe/client";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   sendOrderConfirmationToCustomer,

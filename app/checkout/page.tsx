@@ -1,135 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { useSearchParams } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
 import CheckoutForm from "@/components/cart/CheckoutForm";
 import OrderSummary from "@/components/cart/OrderSummary";
 import { useCart } from "@/hooks/useCart";
 import { checkoutSchema, type CheckoutValues } from "@/lib/validations";
 import { Lock } from "lucide-react";
+import { DELIVERY_COST } from "@/lib/utils";
+import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import { useCart as useCartHook } from "@/hooks/useCart";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
-
-export default function CheckoutPage() {
-  const { cart } = useCart();
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"details" | "payment">("details");
-
-  const form = useForm<CheckoutValues>({
-    resolver: zodResolver(checkoutSchema),
-    defaultValues: {
-      country: "United Kingdom",
-    },
-  });
-
-  const handleDetailsSubmit = async (values: CheckoutValues) => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart, shippingAddress: values }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create payment intent");
-      setClientSecret(data.clientSecret);
-      setStep("payment");
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (cart.items.length === 0 && typeof window !== "undefined") {
-    return (
-      <SiteLayout>
-        <div className="container-custom py-20 text-center">
-          <p className="font-sans text-gray-500">Your cart is empty.</p>
-        </div>
-      </SiteLayout>
-    );
-  }
-
-  return (
-    <SiteLayout>
-      <div className="container-custom py-10 md:py-14 max-w-5xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-serif text-3xl font-bold text-gray-900">Checkout</h1>
-          <div className="flex items-center gap-1.5 text-xs font-sans text-gray-500">
-            <Lock size={13} className="text-emerald-600" />
-            Secure &amp; encrypted
-          </div>
-        </div>
-
-        {/* Steps */}
-        <div className="flex items-center gap-2 mb-8 font-sans text-sm">
-          <span className={`flex items-center gap-1.5 ${step === "details" ? "text-burgundy-800 font-semibold" : "text-gray-400"}`}>
-            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${step === "details" ? "bg-burgundy-800 text-white" : "bg-gray-200 text-gray-500"}`}>1</span>
-            Your Details
-          </span>
-          <div className="flex-1 h-px bg-gray-200 max-w-[60px]" />
-          <span className={`flex items-center gap-1.5 ${step === "payment" ? "text-burgundy-800 font-semibold" : "text-gray-400"}`}>
-            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${step === "payment" ? "bg-burgundy-800 text-white" : "bg-gray-200 text-gray-500"}`}>2</span>
-            Payment
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Main form */}
-          <div className="lg:col-span-3">
-            {step === "details" && (
-              <CheckoutForm
-                form={form}
-                onSubmit={handleDetailsSubmit}
-                loading={loading}
-              />
-            )}
-
-            {step === "payment" && clientSecret && (
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  appearance: {
-                    theme: "stripe",
-                    variables: {
-                      colorPrimary: "#722F37",
-                      fontFamily: "DM Sans, system-ui, sans-serif",
-                      borderRadius: "6px",
-                    },
-                  },
-                }}
-              >
-                <StripePaymentForm
-                  clientSecret={clientSecret}
-                  shippingAddress={form.getValues()}
-                  onBack={() => setStep("details")}
-                />
-              </Elements>
-            )}
-          </div>
-
-          {/* Order summary */}
-          <div className="lg:col-span-2">
-            <OrderSummary cart={cart} />
-          </div>
-        </div>
-      </div>
-    </SiteLayout>
-  );
-}
-
-import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
-import { useCart as useCartHook } from "@/hooks/useCart";
 
 function StripePaymentForm({
   clientSecret,
@@ -236,5 +125,133 @@ function StripePaymentForm({
         Payments are secured by Stripe. We never store your card details.
       </p>
     </form>
+  );
+}
+
+function CheckoutContent() {
+  const { cart } = useCart();
+  const searchParams = useSearchParams();
+  const fulfilment = searchParams.get("fulfilment") === "delivery" ? "delivery" : "collection";
+  const deliveryFee = fulfilment === "delivery" ? DELIVERY_COST : 0;
+
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<"details" | "payment">("details");
+
+  const form = useForm<CheckoutValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      country: "United Kingdom",
+      fulfilment,
+    },
+  });
+
+  const handleDetailsSubmit = async (values: CheckoutValues) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cart,
+          shippingAddress: values,
+          fulfilment,
+          deliveryFee,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create payment intent");
+      setClientSecret(data.clientSecret);
+      setStep("payment");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (cart.items.length === 0 && typeof window !== "undefined") {
+    return (
+      <div className="container-custom py-20 text-center">
+        <p className="font-sans text-gray-500">Your cart is empty.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-custom py-10 md:py-14 max-w-5xl">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-serif text-3xl font-bold text-gray-900">Checkout</h1>
+        <div className="flex items-center gap-1.5 text-xs font-sans text-gray-500">
+          <Lock size={13} className="text-emerald-600" />
+          Secure &amp; encrypted
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mb-8 font-sans text-sm">
+        <span className={`flex items-center gap-1.5 ${step === "details" ? "text-burgundy-800 font-semibold" : "text-gray-400"}`}>
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${step === "details" ? "bg-burgundy-800 text-white" : "bg-gray-200 text-gray-500"}`}>1</span>
+          Your Details
+        </span>
+        <div className="flex-1 h-px bg-gray-200 max-w-[60px]" />
+        <span className={`flex items-center gap-1.5 ${step === "payment" ? "text-burgundy-800 font-semibold" : "text-gray-400"}`}>
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${step === "payment" ? "bg-burgundy-800 text-white" : "bg-gray-200 text-gray-500"}`}>2</span>
+          Payment
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3">
+          {step === "details" && (
+            <CheckoutForm
+              form={form}
+              onSubmit={handleDetailsSubmit}
+              loading={loading}
+            />
+          )}
+
+          {step === "payment" && clientSecret && (
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: {
+                  theme: "stripe",
+                  variables: {
+                    colorPrimary: "#722F37",
+                    fontFamily: "DM Sans, system-ui, sans-serif",
+                    borderRadius: "6px",
+                  },
+                },
+              }}
+            >
+              <StripePaymentForm
+                clientSecret={clientSecret}
+                shippingAddress={form.getValues()}
+                onBack={() => setStep("details")}
+              />
+            </Elements>
+          )}
+        </div>
+
+        <div className="lg:col-span-2">
+          <OrderSummary cart={cart} fulfilment={fulfilment} deliveryFee={deliveryFee} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <SiteLayout>
+      <Suspense fallback={
+        <div className="container-custom py-20 text-center">
+          <p className="font-sans text-gray-400">Loading checkout...</p>
+        </div>
+      }>
+        <CheckoutContent />
+      </Suspense>
+    </SiteLayout>
   );
 }

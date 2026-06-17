@@ -22,18 +22,21 @@ const bodySchema = z.object({
     item_count: z.number(),
   }),
   shippingAddress: z.object({
+    fulfilment: z.enum(["delivery", "collection"]).optional(),
     first_name: z.string(),
     last_name: z.string(),
     email: z.string().email(),
     phone: z.string(),
-    address_line_1: z.string(),
+    address_line_1: z.string().optional().or(z.literal("")),
     address_line_2: z.string().optional(),
-    city: z.string(),
+    city: z.string().optional().or(z.literal("")),
     county: z.string().optional(),
-    postcode: z.string(),
+    postcode: z.string().optional().or(z.literal("")),
     country: z.string(),
     notes: z.string().optional(),
   }),
+  fulfilment: z.enum(["delivery", "collection"]).optional(),
+  deliveryFee: z.number().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -44,22 +47,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
     }
 
-    const { cart, shippingAddress } = parsed.data;
+    const { cart, shippingAddress, fulfilment, deliveryFee } = parsed.data;
 
     if (!cart.items.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
     const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const shipping = calculateShipping(subtotal);
+
+    const shipping =
+      fulfilment === "collection"
+        ? 0
+        : fulfilment === "delivery"
+        ? deliveryFee ?? calculateShipping(subtotal)
+        : calculateShipping(subtotal);
+
     const total = subtotal + shipping;
 
     const lineItemsDescription = cart.items
       .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}`)
       .join(", ");
 
-    // Stripe metadata values are capped at 500 chars each, so cart items are
-    // JSON-stringified and chunked across multiple metadata keys if needed.
     const cartItemsJson = JSON.stringify(cart.items);
     const CHUNK_SIZE = 480;
     const cartItemChunks: Record<string, string> = {};
@@ -86,6 +94,7 @@ export async function POST(req: NextRequest) {
         subtotal: subtotal.toFixed(2),
         shipping: shipping.toFixed(2),
         total: total.toFixed(2),
+        fulfilment_method: fulfilment || "collection",
       },
       description: `Abstitch order — ${shippingAddress.first_name} ${shippingAddress.last_name}`,
     });

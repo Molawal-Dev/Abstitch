@@ -8,3 +8,4 @@ node_modules
 out/
 build/
 scripts/products.csv
+stripe.exe
