@@ -35,7 +35,7 @@ export default function SizeGuideModal({ sizeGuide, description }: SizeGuideModa
         className="inline-flex items-center gap-1.5 text-md text-burgundy-800 hover:underline font-medium mt-4"
       >
         <Ruler size={14} />
-        Size Guide
+        {sizeGuide.title}
       </button>
 
       {open && (

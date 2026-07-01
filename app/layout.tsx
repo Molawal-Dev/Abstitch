@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Playfair_Display, DM_Sans, Poppins, Montserrat } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/hooks/useCart";
 import { Toaster } from "@/components/ui/Toaster";
@@ -15,6 +15,20 @@ const playfair = Playfair_Display({
 const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-montserrat",
   display: "swap",
 });
 
@@ -70,7 +84,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-GB" className={`${playfair.variable} ${dmSans.variable}`}>
+    <html lang="en-GB" className={`${playfair.variable} ${dmSans.variable} ${poppins.variable} ${montserrat.variable}`}>
       <body className="font-sans bg-white text-gray-900 antialiased">
         <CartProvider>
           <WishlistProvider>

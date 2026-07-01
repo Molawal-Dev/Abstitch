@@ -129,6 +129,20 @@
   .delay-400 { animation-delay: 400ms; }
 }
 
+/* ── Revolution Slider Replica Keyframes ── */
+@keyframes revSlideFromRight {
+  0%   { opacity: 0; transform: translateX(90px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes revFadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes revFadeInUp {
+  0%   { opacity: 0; transform: translateY(22px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Rich text / TipTap content rendering ── */
 .rich-content h1 { @apply font-serif text-2xl font-bold text-gray-900 mb-3 mt-5; }
 .rich-content h2 { @apply font-serif text-xl font-bold text-gray-900 mb-2 mt-4; }
@@ -164,4 +178,30 @@
 }
 .rich-content tbody tr:last-child td {
   @apply border-b-0;
+}
+
+/* ── HeroSlider responsive ─────────────────────────────────────────────────── */
+.hero-slider-section {
+  height: 604px;
+}
+/* Tablet */
+@media (max-width: 1023px) {
+  .hero-slider-section {
+    height: 520px;
+  }
+}
+/* Mobile */
+@media (max-width: 639px) {
+  .hero-slider-section {
+    height: 420px;
+  }
+  .hero-content-area {
+    left: 20px !important;
+    width: calc(100% - 40px) !important;
+    top: 8% !important;
+  }
+  .hero-watermark {
+    padding-left: 20px !important;
+    font-size: 80px !important;
+  }
 }
