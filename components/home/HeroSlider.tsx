@@ -231,7 +231,7 @@ export default function HeroSlider() {
         />
       </div>
 
-      {/*Hero image — FIX 2: hidden on mobile (hidden sm:block) so it doesn't overlay text*/}
+      {/*Hero image*/}
       <div
         key={`img-${animKey}`}
         className="hidden sm:block absolute top-0 h-full z-10"
@@ -252,7 +252,7 @@ export default function HeroSlider() {
         />
       </div>
 
-      {/*Large watermark — FIX 3: hero-watermark class overrides font-size to 80px on mobile*/}
+      {/*Large watermark*/}
       <div
         key={`wm-${animKey}`}
         className="hero-watermark absolute z-20 pointer-events-none"
@@ -365,7 +365,7 @@ export default function HeroSlider() {
         </a>
       </div>
 
-      {/*Main slide content — FIX 4: hero-content-area overrides left/width/top on mobile*/}
+      {/*Main slide content*/}
       <div
         className="hero-content-area absolute z-30 flex flex-col"
         style={{
@@ -399,7 +399,7 @@ export default function HeroSlider() {
           </p>
         </div>
 
-        {/* Heading — FIX 5: min lowered from 53px → 32px so it scales on small screens */}
+        {/* Heading */}
         <div
           key={`h1-${animKey}`}
           style={{
@@ -408,12 +408,12 @@ export default function HeroSlider() {
           }}
         >
           <h1
+            className="leading-[1.08] md:leading-[0.99]"
             style={{
               fontFamily: POPPINS,
-              fontSize: "clamp(32px, 6.2vw, 90px)",
+              fontSize: "clamp(44px, 7.2vw, 90px)",
               fontWeight: 700,
               color: "white",
-              lineHeight: 0.99,
               margin: 0,
               letterSpacing: "0px",
             }}
