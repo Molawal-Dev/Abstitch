@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters from "@/components/shop/ShopFilters";
+import { getCategoryFilterOptions } from "@/lib/supabase/products";
 import ShopPagination from "@/components/shop/ShopPagination";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ChevronRight } from "lucide-react";
@@ -12,7 +13,15 @@ export const revalidate = 0;
 
 interface Props {
   params: { school: string };
-  searchParams: { page?: string; sort?: string; in_stock?: string };
+  searchParams: {
+    page?: string;
+    sort?: string;
+    in_stock?: string;
+    color?: string;
+    size?: string;
+    min_price?: string;
+    max_price?: string;
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -29,7 +38,11 @@ async function getSchoolProducts(
   schoolSlug: string,
   page: number,
   sort: string,
-  inStock: boolean
+  inStock: boolean,
+  color?: string,
+  size?: string,
+  minPrice?: number,
+  maxPrice?: number,
 ) {
   try {
     const supabase = createServerSupabaseClient();
@@ -58,12 +71,40 @@ async function getSchoolProducts(
       .select("product_id")
       .eq("category_id", cat.id);
 
-    const productIds = (pcData || []).map(
+    let allowedIds = (pcData || []).map(
       (pc: { product_id: string }) => pc.product_id
     );
 
-    if (!productIds.length) {
+    if (!allowedIds.length) {
       return { products: [], total: 0, category: cat, parentCat, totalPages: 0 };
+    }
+
+    if (color) {
+      const { data: colorMatches } = await supabase
+        .from("product_color_swatches")
+        .select("product_id")
+        .ilike("color_name", color)
+        .in("product_id", allowedIds);
+      const colorIds = (colorMatches || []).map((r: { product_id: string }) => r.product_id);
+      if (!colorIds.length) {
+        return { products: [], total: 0, category: cat, parentCat, totalPages: 0 };
+      }
+      allowedIds = colorIds;
+    }
+
+    if (size) {
+      const { data: sizeMatches } = await supabase
+        .from("product_variants")
+        .select("product_id")
+        .ilike("size", size)
+        .in("product_id", allowedIds);
+      const sizeIds = [...new Set(
+        (sizeMatches || []).map((r: { product_id: string }) => r.product_id)
+      )];
+      if (!sizeIds.length) {
+        return { products: [], total: 0, category: cat, parentCat, totalPages: 0 };
+      }
+      allowedIds = sizeIds;
     }
 
     const from = (page - 1) * PER_PAGE;
@@ -71,17 +112,29 @@ async function getSchoolProducts(
     let query = supabase
       .from("products")
       .select(
-        `*, 
+        `*,
         product_categories(categories(id,name,slug,parent_id)),
-        product_variants(*), 
-        product_color_swatches(*), 
+        product_variants(*),
+        product_color_swatches(*),
         size_guides(*)`,
         { count: "exact" }
       )
       .eq("published", true)
-      .in("id", productIds);
+      .in("id", allowedIds);
 
     if (inStock) query = query.eq("in_stock", true);
+
+    // Price filter — handles null price_range fields via .or()
+    if (minPrice !== undefined) {
+      query = query.or(
+        `price_range_min.gte.${minPrice},and(price_range_min.is.null,regular_price.gte.${minPrice})`
+      );
+    }
+    if (maxPrice !== undefined) {
+      query = query.or(
+        `price_range_max.lte.${maxPrice},and(price_range_max.is.null,regular_price.lte.${maxPrice})`
+      );
+    }
 
     switch (sort) {
       case "price_asc":
@@ -157,55 +210,52 @@ async function getSchoolProducts(
   }
 }
 
-export default async function SchoolProductsPage({
-  params,
-  searchParams,
-}: Props) {
-  const page = parseInt(searchParams.page || "1", 10);
-  const sort = searchParams.sort || "newest";
+export default async function AcademySchoolProductsPage({ params, searchParams }: Props) {
+  const page    = parseInt(searchParams.page || "1", 10);
+  const sort    = searchParams.sort || "newest";
   const inStock = searchParams.in_stock === "true";
+  const color   = searchParams.color;
+  const size    = searchParams.size;
+  const minP    = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
+  const maxP    = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
-  const result = await getSchoolProducts(params.school, page, sort, inStock);
+  const result = await getSchoolProducts(
+    params.school, page, sort, inStock, color, size, minP, maxP
+  );
 
   if (!result || !result.category) notFound();
 
-  const { products, total, category, parentCat, totalPages } = result;
+  const { products, total, category, totalPages } = result;
 
-  const isAcademy = parentCat?.slug === "academy-schools";
-  const schoolTypeHref = isAcademy
-    ? "/shop/school-wear/academy-schools"
-    : "/shop/school-wear/primary-schools";
-  const schoolTypeLabel = isAcademy ? "Academy Schools" : "Primary Schools";
+  const basePath = `/shop/school-wear/academy-schools/${params.school}`;
+
+  let filterOptions = {
+    colors: [] as { name: string; hex: string }[],
+    sizes: [] as string[],
+    minPrice: 0,
+    maxPrice: 100,
+  };
+  try {
+    filterOptions = await getCategoryFilterOptions(params.school);
+  } catch {
+  }
 
   return (
     <SiteLayout>
-      {/* Header */}
       <div className="bg-gradient-to-br from-burgundy-900 to-burgundy-800 text-white py-12">
         <div className="container-custom">
           <nav className="flex items-center gap-1.5 text-xs text-white/60 font-sans mb-4 flex-wrap">
-            <Link href="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <ChevronRight size={12} />
-            <Link
-              href="/shop/school-wear"
-              className="hover:text-white transition-colors"
-            >
-              School Wear
-            </Link>
+            <Link href="/shop/school-wear" className="hover:text-white transition-colors">School Wear</Link>
             <ChevronRight size={12} />
-            <Link
-              href={schoolTypeHref}
-              className="hover:text-white transition-colors"
-            >
-              {schoolTypeLabel}
+            <Link href="/shop/school-wear/academy-schools" className="hover:text-white transition-colors">
+              Academy Schools
             </Link>
             <ChevronRight size={12} />
             <span className="text-white/90">{category.name}</span>
           </nav>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold">
-            {category.name}
-          </h1>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold">{category.name}</h1>
           {total > 0 && (
             <p className="font-sans text-white/70 text-sm mt-2">
               {total} product{total !== 1 ? "s" : ""} available
@@ -220,7 +270,15 @@ export default async function SchoolProductsPage({
             <ShopFilters
               currentSort={sort}
               inStock={inStock}
-              basePath={`${schoolTypeHref}/${params.school}`}
+              basePath={basePath}
+              colors={filterOptions.colors}
+              sizes={filterOptions.sizes}
+              minPrice={filterOptions.minPrice}
+              maxPrice={filterOptions.maxPrice}
+              currentColor={color}
+              currentSize={size}
+              currentMinPrice={minP}
+              currentMaxPrice={maxP}
             />
           </aside>
 
@@ -233,7 +291,7 @@ export default async function SchoolProductsPage({
                     <ShopPagination
                       currentPage={page}
                       totalPages={totalPages}
-                      basePath={`${schoolTypeHref}/${params.school}`}
+                      basePath={basePath}
                       searchParams={searchParams}
                     />
                   </div>
@@ -244,8 +302,8 @@ export default async function SchoolProductsPage({
                 <p className="font-sans text-gray-400 text-sm mb-4">
                   No products found for {category.name}.
                 </p>
-                <Link href={schoolTypeHref} className="btn-outline inline-flex">
-                  Back to {schoolTypeLabel}
+                <Link href="/shop/school-wear/academy-schools" className="btn-outline inline-flex">
+                  Back to Academy Schools
                 </Link>
               </div>
             )}

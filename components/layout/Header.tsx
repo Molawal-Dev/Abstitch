@@ -37,6 +37,7 @@ const navItems: NavItem[] = [
         ],
       },
       { label: "Garments", href: "/shop/garments" },
+      { label: "Safety Wear", href: "/shop/safety-wear" },
     ],
   },
   {

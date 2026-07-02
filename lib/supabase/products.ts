@@ -80,6 +80,10 @@ export async function getProducts(
     page = 1,
     per_page = 24,
     sort = "newest",
+    min_price,
+    max_price,
+    color,
+    size,
   } = filters;
 
   const categorySlug = school || category;
@@ -118,6 +122,48 @@ export async function getProducts(
 
   if (in_stock) {
     query = query.eq("in_stock", true);
+  }
+
+  if (min_price !== undefined) {
+    query = query.or(
+      `price_range_min.gte.${min_price},and(price_range_min.is.null,regular_price.gte.${min_price})`
+    );
+  }
+
+  if (max_price !== undefined) {
+    query = query.or(
+      `price_range_max.lte.${max_price},and(price_range_max.is.null,regular_price.lte.${max_price})`
+    );
+  }
+
+  // Color filter
+  if (color) {
+    const { data: colorMatches } = await supabase
+      .from("product_color_swatches")
+      .select("product_id")
+      .ilike("color_name", color);
+    const colorIds = (colorMatches || []).map((r: { product_id: string }) => r.product_id);
+    if (colorIds.length === 0) {
+      return { data: [], total: 0, page, per_page, total_pages: 0 };
+    }
+    query = filteredProductIds !== null
+      ? query.in("id", colorIds.filter((id) => filteredProductIds!.includes(id)))
+      : query.in("id", colorIds);
+  }
+
+  // Size filter
+  if (size) {
+    const { data: sizeMatches } = await supabase
+      .from("product_variants")
+      .select("product_id")
+      .ilike("size", size);
+    const sizeIds = (sizeMatches || []).map((r: { product_id: string }) => r.product_id);
+    if (sizeIds.length === 0) {
+      return { data: [], total: 0, page, per_page, total_pages: 0 };
+    }
+    query = filteredProductIds !== null
+      ? query.in("id", sizeIds.filter((id) => filteredProductIds!.includes(id)))
+      : query.in("id", sizeIds);
   }
 
   switch (sort) {
@@ -266,4 +312,106 @@ export async function getProductsByCategory(
 
   if (error || !data) return [];
   return data.map(mapProductRow);
+}
+
+export async function getCategoryFilterOptions(categorySlug: string): Promise<{
+  colors: { name: string; hex: string }[];
+  sizes: string[];
+  minPrice: number;
+  maxPrice: number;
+}> {
+  const productIds = await getProductIdsByCategory(categorySlug);
+
+  if (productIds.length === 0) {
+    return { colors: [], sizes: [], minPrice: 0, maxPrice: 0 };
+  }
+
+  const [swatchRes, variantRes, priceRes] = await Promise.all([
+    supabase
+      .from("product_color_swatches")
+      .select("color_name, hex_code")
+      .in("product_id", productIds),
+    supabase
+      .from("product_variants")
+      .select("size")
+      .in("product_id", productIds)
+      .not("size", "is", null),
+    supabase
+      .from("products")
+      .select("price_range_min, price_range_max, regular_price")
+      .in("id", productIds)
+      .eq("published", true),
+  ]);
+
+  // Deduplicate colors by name (case-insensitive)
+  const seenColors = new Set<string>();
+  const colors: { name: string; hex: string }[] = [];
+  for (const s of swatchRes.data || []) {
+    const key = s.color_name.toLowerCase();
+    if (!seenColors.has(key)) {
+      seenColors.add(key);
+      colors.push({ name: s.color_name, hex: s.hex_code });
+    }
+  }
+
+  // Deduplicate sizes
+  const sizes = [
+    ...new Set(
+      (variantRes.data || [])
+        .map((v: { size: string }) => v.size)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
+  // Price range across all products in the category
+  const prices: number[] = [];
+  for (const p of priceRes.data || []) {
+    if (p.price_range_min) prices.push(p.price_range_min);
+    if (p.price_range_max) prices.push(p.price_range_max);
+    if (p.regular_price) prices.push(p.regular_price);
+  }
+  const minPrice = prices.length ? Math.floor(Math.min(...prices)) : 0;
+  const maxPrice = prices.length ? Math.ceil(Math.max(...prices)) : 500;
+
+  return { colors, sizes, minPrice, maxPrice };
+}
+
+
+export function deriveFilterOptions(products: import("@/types").Product[]): {
+  colors: { name: string; hex: string }[];
+  sizes: string[];
+  minPrice: number;
+  maxPrice: number;
+} {
+  const seenColors = new Set<string>();
+  const colors: { name: string; hex: string }[] = [];
+  const seenSizes = new Set<string>();
+  const sizes: string[] = [];
+  const prices: number[] = [];
+
+  for (const p of products) {
+    for (const c of p.colors || []) {
+      const key = c.name.toLowerCase();
+      if (!seenColors.has(key)) {
+        seenColors.add(key);
+        colors.push({ name: c.name, hex: c.hex });
+      }
+    }
+    for (const s of p.sizes || []) {
+      if (s && !seenSizes.has(s)) {
+        seenSizes.add(s);
+        sizes.push(s);
+      }
+    }
+    if (p.price_range_min) prices.push(p.price_range_min);
+    if (p.price_range_max) prices.push(p.price_range_max);
+    if (p.regular_price) prices.push(p.regular_price);
+  }
+
+  return {
+    colors,
+    sizes,
+    minPrice: prices.length ? Math.floor(Math.min(...prices)) : 0,
+    maxPrice: prices.length ? Math.ceil(Math.max(...prices)) : 100,
+  };
 }

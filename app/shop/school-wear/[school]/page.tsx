@@ -4,6 +4,7 @@ import SiteLayout from "@/components/layout/SiteLayout";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters from "@/components/shop/ShopFilters";
 import ShopPagination from "@/components/shop/ShopPagination";
+import { getCategoryFilterOptions } from "@/lib/supabase/products";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -12,14 +13,20 @@ export const revalidate = 0;
 
 interface Props {
   params: { school: string };
-  searchParams: { page?: string; sort?: string; in_stock?: string };
+  searchParams: {
+    page?: string;
+    sort?: string;
+    in_stock?: string;
+    color?: string;
+    size?: string;
+    min_price?: string;
+    max_price?: string;
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slug = params.school;
-  const label = slug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const label = slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   return {
     title: `${label} Uniforms | Abstitch`,
     description: `Browse school uniforms for ${label}. Abstitch, Aberdeen.`,
@@ -30,7 +37,11 @@ async function getSchoolProducts(
   schoolSlug: string,
   page: number,
   sort: string,
-  inStock: boolean
+  inStock: boolean,
+  color?: string,
+  size?: string,
+  minPrice?: number,
+  maxPrice?: number,
 ) {
   try {
     const supabase = createServerSupabaseClient();
@@ -41,7 +52,7 @@ async function getSchoolProducts(
       .eq("slug", schoolSlug)
       .single();
 
-    if (!cat) return { products: [], total: 0, category: null };
+    if (!cat) return { products: [], total: 0, category: null, parentCat: null, totalPages: 0 };
 
     let parentCat = null;
     if (cat.parent_id) {
@@ -58,10 +69,39 @@ async function getSchoolProducts(
       .select("product_id")
       .eq("category_id", cat.id);
 
-    const productIds = (pcData || []).map((pc: { product_id: string }) => pc.product_id);
+    let allowedIds = (pcData || []).map((pc: { product_id: string }) => pc.product_id);
 
-    if (!productIds.length) {
-      return { products: [], total: 0, category: cat, parentCat };
+    if (!allowedIds.length) {
+      return { products: [], total: 0, category: cat, parentCat, totalPages: 0 };
+    }
+
+    if (color) {
+      const { data: colorMatches } = await supabase
+        .from("product_color_swatches")
+        .select("product_id")
+        .ilike("color_name", color)
+        .in("product_id", allowedIds);
+      const colorIds = (colorMatches || []).map((r: { product_id: string }) => r.product_id);
+      if (!colorIds.length) {
+        return { products: [], total: 0, category: cat, parentCat, totalPages: 0 };
+      }
+      allowedIds = colorIds;
+    }
+
+    if (size) {
+      const { data: sizeMatches } = await supabase
+        .from("product_variants")
+        .select("product_id")
+        .ilike("size", size)
+        .in("product_id", allowedIds);
+      // Deduplicate — a product can have multiple variants with the same size
+      const sizeIds = [...new Set(
+        (sizeMatches || []).map((r: { product_id: string }) => r.product_id)
+      )];
+      if (!sizeIds.length) {
+        return { products: [], total: 0, category: cat, parentCat, totalPages: 0 };
+      }
+      allowedIds = sizeIds;
     }
 
     const PER_PAGE = 24;
@@ -75,9 +115,20 @@ async function getSchoolProducts(
         { count: "exact" }
       )
       .eq("published", true)
-      .in("id", productIds);
+      .in("id", allowedIds);
 
     if (inStock) query = query.eq("in_stock", true);
+
+    if (minPrice !== undefined) {
+      query = query.or(
+        `price_range_min.gte.${minPrice},and(price_range_min.is.null,regular_price.gte.${minPrice})`
+      );
+    }
+    if (maxPrice !== undefined) {
+      query = query.or(
+        `price_range_max.lte.${maxPrice},and(price_range_max.is.null,regular_price.lte.${maxPrice})`
+      );
+    }
 
     switch (sort) {
       case "price_asc":
@@ -159,28 +210,53 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
     notFound();
   }
 
-  const page = parseInt(searchParams.page || "1", 10);
-  const sort = searchParams.sort || "newest";
+  const page    = parseInt(searchParams.page || "1", 10);
+  const sort    = searchParams.sort || "newest";
   const inStock = searchParams.in_stock === "true";
+  const color   = searchParams.color;
+  const size    = searchParams.size;
+  const minP    = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
+  const maxP    = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
   const { products, total, category, parentCat, totalPages } =
-    await getSchoolProducts(school, page, sort, inStock);
+    await getSchoolProducts(school, page, sort, inStock, color, size, minP, maxP);
 
   if (!category) notFound();
+
+  const basePath = `/shop/school-wear/${school}`;
+
+  let filterOptions = { colors: [] as {name:string;hex:string}[], sizes: [] as string[], minPrice: 0, maxPrice: 100 };
+  try {
+    filterOptions = await getCategoryFilterOptions(school);
+  } catch {
+    const seenC = new Set<string>(), seenS = new Set<string>();
+    const prices: number[] = [];
+    for (const p of products) {
+      for (const c of p.colors || []) {
+        if (!seenC.has(c.name.toLowerCase())) { seenC.add(c.name.toLowerCase()); filterOptions.colors.push({ name: c.name, hex: c.hex }); }
+      }
+      for (const s of p.sizes || []) {
+        if (s && !seenS.has(s)) { seenS.add(s); filterOptions.sizes.push(s); }
+      }
+      if (p.price_range_min) prices.push(p.price_range_min);
+      if (p.price_range_max) prices.push(p.price_range_max);
+      if (p.regular_price) prices.push(p.regular_price);
+    }
+    if (prices.length) {
+      filterOptions.minPrice = Math.floor(Math.min(...prices));
+      filterOptions.maxPrice = Math.ceil(Math.max(...prices));
+    }
+  }
 
   const displayName = category.name;
   const totalPages_ = totalPages || 0;
 
-  // Build breadcrumb path
   const isAcademy = parentCat?.slug === "academy-schools";
-  const schoolTypeHref = isAcademy
-    ? "/shop/school-wear/academy-schools"
-    : "/shop/school-wear/primary-schools";
+  const schoolTypeHref  = isAcademy ? "/shop/school-wear/academy-schools" : "/shop/school-wear/primary-schools";
   const schoolTypeLabel = isAcademy ? "Academy Schools" : "Primary Schools";
 
   return (
     <SiteLayout>
-      {/* Header */}
       <div className="bg-gradient-to-br from-burgundy-900 to-burgundy-800 text-white py-12">
         <div className="container-custom">
           <nav className="flex items-center gap-1.5 text-xs text-white/60 font-sans mb-4 flex-wrap">
@@ -194,9 +270,7 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
             <ChevronRight size={12} />
             <span className="text-white/90">{displayName}</span>
           </nav>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold">
-            {displayName}
-          </h1>
+          <h1 className="font-serif text-3xl md:text-4xl font-bold">{displayName}</h1>
           {total > 0 && (
             <p className="font-sans text-white/70 text-sm mt-2">
               {total} product{total !== 1 ? "s" : ""} available
@@ -211,7 +285,15 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
             <ShopFilters
               currentSort={sort}
               inStock={inStock}
-              basePath={`/shop/school-wear/${school}`}
+              basePath={basePath}
+              colors={filterOptions.colors}
+              sizes={filterOptions.sizes}
+              minPrice={filterOptions.minPrice}
+              maxPrice={filterOptions.maxPrice}
+              currentColor={color}
+              currentSize={size}
+              currentMinPrice={minP}
+              currentMaxPrice={maxP}
             />
           </aside>
 
@@ -224,7 +306,7 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
                     <ShopPagination
                       currentPage={page}
                       totalPages={totalPages_}
-                      basePath={`/shop/school-wear/${school}`}
+                      basePath={basePath}
                       searchParams={searchParams}
                     />
                   </div>
@@ -235,10 +317,7 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
                 <p className="font-sans text-gray-400 text-sm mb-4">
                   No products found for {displayName}.
                 </p>
-                <Link
-                  href={schoolTypeHref}
-                  className="btn-outline inline-flex"
-                >
+                <Link href={schoolTypeHref} className="btn-outline inline-flex">
                   Back to {schoolTypeLabel}
                 </Link>
               </div>

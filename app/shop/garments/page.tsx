@@ -3,7 +3,7 @@ import SiteLayout from "@/components/layout/SiteLayout";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters from "@/components/shop/ShopFilters";
 import ShopPagination from "@/components/shop/ShopPagination";
-import { getProducts } from "@/lib/supabase/products";
+import { getProducts, getCategoryFilterOptions } from "@/lib/supabase/products";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -21,6 +21,10 @@ interface Props {
     sort?: string;
     in_stock?: string;
     category?: string;
+    color?: string;
+    size?: string;
+    min_price?: string;
+    max_price?: string;
   };
 }
 
@@ -40,6 +44,10 @@ export default async function GarmentsPage({ searchParams }: Props) {
     "newest";
   const in_stock = searchParams.in_stock === "true";
   const activeCategory = searchParams.category || "garments";
+  const color     = searchParams.color;
+  const size      = searchParams.size;
+  const minPrice  = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
+  const maxPrice  = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
   let result: Awaited<ReturnType<typeof getProducts>> = {
     data: [],
@@ -49,14 +57,22 @@ export default async function GarmentsPage({ searchParams }: Props) {
     total_pages: 0,
   };
 
+  let filterOptions = { colors: [] as {name:string;hex:string}[], sizes: [] as string[], minPrice: 0, maxPrice: 100 };
   try {
-    result = await getProducts({
-      category: activeCategory,
-      page,
-      sort,
-      in_stock: in_stock || undefined,
-      per_page: 24,
-    });
+    [filterOptions, result] = await Promise.all([
+      getCategoryFilterOptions(activeCategory),
+      getProducts({
+        category: activeCategory,
+        page,
+        sort,
+        in_stock: in_stock || undefined,
+        color,
+        size,
+        min_price: minPrice,
+        max_price: maxPrice,
+        per_page: 24,
+      }),
+    ]);
   } catch {
     // DB not connected
   }
@@ -117,6 +133,14 @@ export default async function GarmentsPage({ searchParams }: Props) {
               currentSort={sort}
               inStock={in_stock}
               basePath="/shop/garments"
+              colors={filterOptions.colors}
+              sizes={filterOptions.sizes}
+              minPrice={filterOptions.minPrice}
+              maxPrice={filterOptions.maxPrice}
+              currentColor={color}
+              currentSize={size}
+              currentMinPrice={minPrice}
+              currentMaxPrice={maxPrice}
             />
           </aside>
           <div className="flex-1 min-w-0">

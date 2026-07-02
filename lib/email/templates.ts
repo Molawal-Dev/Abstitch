@@ -4,7 +4,7 @@ import type { Order } from "@/types";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM_EMAIL = "Abstitch <sales@abstitch.com>";
-const ADMIN_EMAILS = ["info@abstitch.co.uk", "muhammedlawal669@gmail.com"];
+const ADMIN_EMAILS = ["info@abstitch.co.uk"];
 
 function formatGBP(amount: number): string {
   return new Intl.NumberFormat("en-GB", {

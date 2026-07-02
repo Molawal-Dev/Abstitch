@@ -21,7 +21,7 @@ export default function Footer() {
           </div>
           <p className="text-sm leading-relaxed text-gray-400">
             Aberdeen&apos;s trusted supplier of school uniforms, embroidery,
-            and workwear for over 50 years. Quality you can rely on, service
+            and workwear for over 25 years. Quality you can rely on, service
             you can count on.
           </p>
           <div className="flex items-center gap-3 mt-5">

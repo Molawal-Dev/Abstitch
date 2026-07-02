@@ -6,7 +6,7 @@ import { Award, Users, Star, Shield } from "lucide-react";
 export const metadata: Metadata = {
   title: "About Abstitch | Aberdeen's School Wear & Embroidery Specialists",
   description:
-    "Learn about Abstitch — Aberdeen's most trusted school wear supplier for over 50 years. Quality embroidery, printing, and uniforms across Scotland.",
+    "Learn about Abstitch — Aberdeen's most trusted school wear supplier for over 25 years. Quality embroidery, printing, and uniforms across Scotland.",
 };
 
 export default function AboutPage() {

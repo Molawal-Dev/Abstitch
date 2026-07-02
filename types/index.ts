@@ -198,6 +198,8 @@ export interface ProductFilters {
   school?: string;
   min_price?: number;
   max_price?: number;
+  color?: string;
+  size?: string;
   in_stock?: boolean;
   search?: string;
   page?: number;

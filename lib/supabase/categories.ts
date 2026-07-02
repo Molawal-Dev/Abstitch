@@ -45,3 +45,24 @@ export async function getSchoolCategories(): Promise<Category[]> {
   if (error) return [];
   return data as Category[];
 }
+
+export async function getSubcategoriesByParentSlug(
+  parentSlug: string
+): Promise<Category[]> {
+  const { data: parent } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", parentSlug)
+    .single();
+
+  if (!parent) return [];
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("parent_id", parent.id)
+    .order("name");
+
+  if (error) return [];
+  return data as Category[];
+}
