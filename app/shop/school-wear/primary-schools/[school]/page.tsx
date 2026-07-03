@@ -6,6 +6,7 @@ import ShopFilters from "@/components/shop/ShopFilters";
 import { getCategoryFilterOptions } from "@/lib/supabase/products";
 import ShopPagination from "@/components/shop/ShopPagination";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import CantFindBanner from "@/components/shop/CantFindBanner";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -46,7 +47,7 @@ async function getSchoolProducts(
 ) {
   try {
     const supabase = createServerSupabaseClient();
-    const PER_PAGE = 24;
+    const PER_PAGE = 12;
 
     const { data: cat } = await supabase
       .from("categories")
@@ -309,6 +310,10 @@ export default async function PrimarySchoolProductsPage({ params, searchParams }
             )}
           </div>
         </div>
+      </div>
+
+      <div className="container-custom">
+        <CantFindBanner variant="school" />
       </div>
     </SiteLayout>
   );

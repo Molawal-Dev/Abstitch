@@ -6,6 +6,7 @@ import HomeSchoolWearSection from "@/components/home/HomeSchoolWearSection";
 import HomeServicesSection from "@/components/home/HomeServicesSection";
 import HomeWhyUsSection from "@/components/home/HomeWhyUsSection";
 import HomeCTABanner from "@/components/home/HomeCTABanner";
+import HomeCategorySlideshow from "@/components/home/HomeCategorySlideshow";
 
 export const metadata: Metadata = {
   title: "Abstitch | School Wear, Embroidery & Printing — Aberdeen",
@@ -19,6 +20,7 @@ export default function HomePage() {
       <HeroSlider />
       <HomeSchoolWearSection />
       <HomeFeaturedSection />
+      <HomeCategorySlideshow />
       <HomeServicesSection />
       <HomeWhyUsSection />
       <HomeCTABanner />

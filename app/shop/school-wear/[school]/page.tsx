@@ -6,6 +6,7 @@ import ShopFilters from "@/components/shop/ShopFilters";
 import ShopPagination from "@/components/shop/ShopPagination";
 import { getCategoryFilterOptions } from "@/lib/supabase/products";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import CantFindBanner from "@/components/shop/CantFindBanner";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -324,6 +325,10 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
             )}
           </div>
         </div>
+      </div>
+
+      <div className="container-custom">
+        <CantFindBanner variant="school" />
       </div>
     </SiteLayout>
   );

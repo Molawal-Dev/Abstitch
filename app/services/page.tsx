@@ -40,6 +40,17 @@ const services = [
 export default function ServicesPage() {
   return (
     <SiteLayout>
+
+      <div className="container-custom py-3">
+        <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-sans">
+          <Link href="/" className="hover:text-burgundy-800 transition-colors">
+            Home
+          </Link>
+          <ChevronRight size={12} />
+          <span className="text-gray-600">Our Services</span>
+        </nav>
+      </div>
+
       <div className="relative overflow-hidden bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[420px]">
           <div className="flex flex-col justify-center px-8 py-16 lg:px-16 xl:px-24">
@@ -110,7 +121,6 @@ export default function ServicesPage() {
                     sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
-
                 <div className="p-5 flex items-center gap-4 border-t border-gray-100">
                   <div className="w-12 h-12 rounded-full bg-burgundy-100 flex items-center justify-center flex-shrink-0">
                     {service.icon}
@@ -156,15 +166,6 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <div className="container-custom py-4">
-        <nav className="flex items-center gap-1.5 text-xs text-gray-400 font-sans">
-          <Link href="/" className="hover:text-burgundy-800 transition-colors">
-            Home
-          </Link>
-          <ChevronRight size={12} />
-          <span className="text-gray-600">Our Services</span>
-        </nav>
-      </div>
     </SiteLayout>
   );
 }

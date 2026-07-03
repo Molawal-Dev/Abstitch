@@ -9,6 +9,7 @@ import ShopFilters from "@/components/shop/ShopFilters";
 import ShopPagination from "@/components/shop/ShopPagination";
 import { getCategoryBySlug } from "@/lib/supabase/categories";
 import { getProducts, getCategoryFilterOptions } from "@/lib/supabase/products";
+import CantFindBanner from "@/components/shop/CantFindBanner";
 
 export const revalidate = 0;
 
@@ -68,7 +69,7 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
     maxPrice: number;
   };
 
-  let result = { data: [] as Awaited<ReturnType<typeof getProducts>>["data"], total: 0, page: 1, per_page: 24, total_pages: 0 };
+  let result = { data: [] as Awaited<ReturnType<typeof getProducts>>["data"], total: 0, page: 1, per_page: 12, total_pages: 0 };
 
   try {
     [filterOptions, result] = await Promise.all([
@@ -189,6 +190,10 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
             )}
           </div>
         </div>
+      </div>
+
+      <div className="container-custom">
+        <CantFindBanner variant="safety" />
       </div>
     </SiteLayout>
   );

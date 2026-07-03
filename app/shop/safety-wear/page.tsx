@@ -49,7 +49,6 @@ function CategoryCard({ category }: { category: Pick<Category, "name" | "slug" |
       href={`/shop/safety-wear/${category.slug}`}
       className="group block bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
     >
-      {/* Image area */}
       <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden">
         {category.image_url ? (
           <Image
@@ -65,8 +64,6 @@ function CategoryCard({ category }: { category: Pick<Category, "name" | "slug" |
           </div>
         )}
       </div>
-
-      {/* Label */}
       <div className="px-4 py-3 border-t border-gray-100">
         <p className="font-sans text-xs font-bold tracking-widest text-gray-800 uppercase text-center">
           {category.name}
@@ -101,24 +98,44 @@ export default async function SafetyWearPage() {
     <SiteLayout>
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-12">
         <div className="container-custom">
-          <nav className="flex items-center gap-1.5 text-xs text-white/60 font-sans mb-4">
-            <Link href="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
-            <ChevronRight size={12} />
-            <Link href="/shop" className="hover:text-white transition-colors">
-              Shop
-            </Link>
-            <ChevronRight size={12} />
-            <span className="text-white/90">Safety Wear & PPE</span>
-          </nav>
-          <h1 className="font-serif text-3xl md:text-4xl font-bold">
-            Premium Workwear &amp; PPE
-          </h1>
-          <p className="font-sans text-white/70 text-sm mt-2 max-w-lg">
-            Quality, safety and performance you can rely on. Explore our range
-            of Portwest workwear and PPE for every job.
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <nav className="flex items-center gap-1.5 text-xs text-white/60 font-sans mb-4">
+                <Link href="/" className="hover:text-white transition-colors">
+                  Home
+                </Link>
+                <ChevronRight size={12} />
+                <Link href="/shop" className="hover:text-white transition-colors">
+                  Shop
+                </Link>
+                <ChevronRight size={12} />
+                <span className="text-white/90">Safety Wear & PPE</span>
+              </nav>
+              <h1 className="font-serif text-3xl md:text-4xl font-bold">
+                Premium Workwear &amp; PPE
+              </h1>
+              <p className="font-sans text-white/70 text-sm mt-2 max-w-lg">
+                Quality, safety and performance you can rely on. Explore our
+                range of Portwest workwear and PPE for every job.
+              </p>
+            </div>
+
+            {/* Portwest logo card */}
+            <div className="hidden md:flex flex-col items-end flex-shrink-0 mt-1">
+              <div className="bg-white rounded-lg px-4 py-2.5 flex flex-col items-center gap-1">
+                <Image
+                  src="/home-banners/portwest-logo.png"
+                  alt="Portwest"
+                  width={110}
+                  height={34}
+                  style={{ objectFit: "contain" }}
+                />
+                <p className="font-sans text-[9px] font-semibold tracking-widest uppercase text-gray-500">
+                  Official Portwest Partner
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -139,12 +156,8 @@ export default async function SafetyWearPage() {
                   <Icon size={18} className="text-slate-700" />
                 </div>
                 <div>
-                  <p className="font-sans font-bold text-sm text-gray-900">
-                    {title}
-                  </p>
-                  <p className="font-sans text-xs text-gray-500 mt-0.5 leading-relaxed">
-                    {body}
-                  </p>
+                  <p className="font-sans font-bold text-sm text-gray-900">{title}</p>
+                  <p className="font-sans text-xs text-gray-500 mt-0.5 leading-relaxed">{body}</p>
                 </div>
               </div>
             ))}

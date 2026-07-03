@@ -3,45 +3,63 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import ProductCard from "@/components/shop/ProductCard";
 import { ArrowRight } from "lucide-react";
 
-async function getProducts() {
+async function getRandomSchoolProducts() {
   try {
     const supabase = createServerSupabaseClient();
 
-    // First try featured products
-    const { data: featured } = await supabase
+    const { data: rootCat } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", "school-wear")
+      .single();
+
+    if (!rootCat) return [];
+
+    const { data: level2 } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("parent_id", rootCat.id);
+
+    const level2Ids = (level2 || []).map((c: { id: string }) => c.id);
+
+    let level3Ids: string[] = [];
+    if (level2Ids.length > 0) {
+      const { data: level3 } = await supabase
+        .from("categories")
+        .select("id")
+        .in("parent_id", level2Ids);
+      level3Ids = (level3 || []).map((c: { id: string }) => c.id);
+    }
+
+    const allCatIds = [rootCat.id, ...level2Ids, ...level3Ids];
+
+    const { data: pcData } = await supabase
+      .from("product_categories")
+      .select("product_id")
+      .in("category_id", allCatIds);
+
+    const productIds = [
+      ...new Set((pcData || []).map((pc: { product_id: string }) => pc.product_id)),
+    ];
+
+    if (!productIds.length) return [];
+
+    const { data } = await supabase
       .from("products")
       .select(`
         *,
-        product_categories(
-          categories(id, name, slug, parent_id)
-        ),
+        product_categories(categories(id, name, slug, parent_id)),
         product_variants(*),
         product_color_swatches(*),
         size_guides(*)
       `)
       .eq("published", true)
-      .eq("featured", true)
-      .limit(8);
+      .in("id", productIds)
+      .limit(32);
 
-    if (featured && featured.length > 0) return featured;
+    if (!data || !data.length) return [];
 
-    // If no featured, just get latest published products
-    const { data: latest } = await supabase
-      .from("products")
-      .select(`
-        *,
-        product_categories(
-          categories(id, name, slug, parent_id)
-        ),
-        product_variants(*),
-        product_color_swatches(*),
-        size_guides(*)
-      `)
-      .eq("published", true)
-      .order("created_at", { ascending: false })
-      .limit(8);
-
-    return latest || [];
+    return [...data].sort(() => Math.random() - 0.5).slice(0, 8);
   } catch {
     return [];
   }
@@ -92,7 +110,7 @@ function mapProduct(row: any) {
 }
 
 export default async function HomeFeaturedSection() {
-  const rawProducts = await getProducts();
+  const rawProducts = await getRandomSchoolProducts();
   const products = rawProducts.map(mapProduct);
 
   return (
@@ -101,11 +119,9 @@ export default async function HomeFeaturedSection() {
         <div className="flex items-end justify-between mb-10">
           <div>
             <p className="font-sans text-xs tracking-[0.3em] uppercase text-burgundy-700 mb-2">
-              Our Products
+              School Items
             </p>
-            <h2 className="section-title">
-              {products.length > 0 ? "Featured Items" : "Latest Products"}
-            </h2>
+            <h2 className="section-title">Shop School Items and Wears</h2>
           </div>
           <Link
             href="/shop/school-wear"
@@ -124,17 +140,17 @@ export default async function HomeFeaturedSection() {
         ) : (
           <div className="text-center py-16 bg-gray-50 rounded-xl">
             <p className="font-sans text-gray-400 text-sm mb-2">
-              No products yet
+              No school uniform products yet
             </p>
             <p className="font-sans text-gray-400 text-xs">
-              Run the seed script to import products
+              Add products to your school categories to see them here
             </p>
           </div>
         )}
 
         <div className="text-center mt-8 md:hidden">
           <Link href="/shop/school-wear" className="btn-outline">
-            View All Products
+            View All School Uniforms
           </Link>
         </div>
       </div>

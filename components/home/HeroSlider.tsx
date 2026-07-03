@@ -56,7 +56,7 @@ const SLIDES: Slide[] = [
     cta: { label: "SHOP NOW", href: "/shop/school-wear" },
     leftBg: "#7B1118",
     rightBg: "#0D0714",
-    image: "/home-banners/school-image.png",
+    image: "/home-banners/school-image1.png",
   },
   {
     id: "ppe",

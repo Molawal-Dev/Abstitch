@@ -53,7 +53,7 @@ export default async function GarmentsPage({ searchParams }: Props) {
     data: [],
     total: 0,
     page: 1,
-    per_page: 24,
+    per_page: 12,
     total_pages: 0,
   };
 
