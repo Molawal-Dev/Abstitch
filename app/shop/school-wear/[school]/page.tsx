@@ -20,6 +20,7 @@ interface Props {
     in_stock?: string;
     color?: string;
     size?: string;
+    gender?: string;
     min_price?: string;
     max_price?: string;
   };
@@ -41,6 +42,7 @@ async function getSchoolProducts(
   inStock: boolean,
   color?: string,
   size?: string,
+  gender?: string,
   minPrice?: number,
   maxPrice?: number,
 ) {
@@ -120,6 +122,8 @@ async function getSchoolProducts(
 
     if (inStock) query = query.eq("in_stock", true);
 
+    if (gender) query = query.eq("gender", gender);
+
     if (minPrice !== undefined) {
       query = query.or(
         `price_range_min.gte.${minPrice},and(price_range_min.is.null,regular_price.gte.${minPrice})`
@@ -187,6 +191,7 @@ async function getSchoolProducts(
         ] as string[],
         variants: row.product_variants || [],
         size_guide: row.size_guides?.[0] || null,
+        enable_gender_options: row.enable_gender_options ?? false,
         created_at: row.created_at,
         updated_at: row.updated_at,
       };
@@ -216,17 +221,18 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
   const inStock = searchParams.in_stock === "true";
   const color   = searchParams.color;
   const size    = searchParams.size;
+  const gender  = searchParams.gender;
   const minP    = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
   const maxP    = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
   const { products, total, category, parentCat, totalPages } =
-    await getSchoolProducts(school, page, sort, inStock, color, size, minP, maxP);
+    await getSchoolProducts(school, page, sort, inStock, color, size, gender, minP, maxP);
 
   if (!category) notFound();
 
   const basePath = `/shop/school-wear/${school}`;
 
-  let filterOptions = { colors: [] as {name:string;hex:string}[], sizes: [] as string[], minPrice: 0, maxPrice: 100 };
+  let filterOptions = { colors: [] as {name:string;hex:string}[], sizes: [] as string[], genders: [] as string[], minPrice: 0, maxPrice: 100 };
   try {
     filterOptions = await getCategoryFilterOptions(school);
   } catch {
@@ -289,10 +295,12 @@ export default async function SchoolProductsPage({ params, searchParams }: Props
               basePath={basePath}
               colors={filterOptions.colors}
               sizes={filterOptions.sizes}
+              genders={filterOptions.genders}
               minPrice={filterOptions.minPrice}
               maxPrice={filterOptions.maxPrice}
               currentColor={color}
               currentSize={size}
+              currentGender={gender}
               currentMinPrice={minP}
               currentMaxPrice={maxP}
             />

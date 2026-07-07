@@ -90,6 +90,8 @@ function mapProduct(row: any) {
     stock_qty: row.stock_qty,
     featured: row.featured,
     published: row.published,
+    gender: row.gender,
+    enable_gender_options: row.enable_gender_options ?? false,
     colors: (row.product_color_swatches || []).map((s: any) => ({
       name: s.color_name,
       hex: s.hex_code,

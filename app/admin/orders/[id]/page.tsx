@@ -139,6 +139,7 @@ export default function AdminOrderDetailPage() {
                             <div className="flex gap-3 mt-0.5">
                               {item.color && <span className="font-sans text-xs text-gray-400">Colour: {item.color}</span>}
                               {item.size && <span className="font-sans text-xs text-gray-400">Size: {item.size}</span>}
+                              {item.gender && <span className="font-sans text-xs text-gray-400">Gender: {item.gender}</span>}
                             </div>
                           </td>
                           <td className="px-5 py-3 font-sans text-sm text-gray-700">{item.quantity}</td>

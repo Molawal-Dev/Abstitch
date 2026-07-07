@@ -112,6 +112,7 @@ async function handlePaymentSuccess(intent: Stripe.PaymentIntent) {
       quantity: item.quantity,
       subtotal: item.price * item.quantity,
       school: item.school || null,
+      gender: item.gender || null,
     }));
 
     const { data: insertedItems, error: itemsError } = await supabase

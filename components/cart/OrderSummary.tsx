@@ -19,7 +19,7 @@ export default function OrderSummary({ cart, fulfilment, deliveryFee }: OrderSum
 
       <div className="space-y-3 mb-5 max-h-72 overflow-y-auto pr-1">
         {cart.items.map((item) => (
-          <div key={`${item.product_id}-${item.variant_id}`} className="flex gap-3">
+          <div key={`${item.product_id}-${item.variant_id}-${item.gender ?? ""}`} className="flex gap-3">
             <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
               <Image
                 src={item.image || "/images/placeholder.jpg"}
@@ -40,6 +40,7 @@ export default function OrderSummary({ cart, fulfilment, deliveryFee }: OrderSum
               <div className="flex gap-2 mt-0.5">
                 {item.color && <span className="text-[10px] text-gray-400 capitalize">{item.color}</span>}
                 {item.size && <span className="text-[10px] text-gray-400">{item.size}</span>}
+                {item.gender && <span className="text-[10px] text-gray-400">{item.gender}</span>}
               </div>
               <p className="font-sans text-xs font-bold text-gray-900 mt-1">
                 {formatPrice(item.price * item.quantity)}

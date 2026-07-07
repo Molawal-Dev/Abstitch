@@ -37,6 +37,8 @@ function mapProduct(row: any, explicitSizeGuide?: any | null) {
     stock_qty: row.stock_qty,
     featured: row.featured,
     published: row.published,
+    gender: row.gender,
+    enable_gender_options: row.enable_gender_options ?? false,
     colors: (row.product_color_swatches || []).map((s: any) => ({
       name: s.color_name,
       hex: s.hex_code,
@@ -112,7 +114,10 @@ export default async function ProductPage({ params, searchParams }: Props) {
   return (
     <SiteLayout>
       <div className="container-custom py-10 md:py-14">
-        <ProductDetail product={product} schoolSlug={searchParams.school} />
+        <ProductDetail
+          product={product}
+          schoolSlug={searchParams.school}
+        />
         <div className="mt-16">
           <RelatedProducts
             productId={product.id}

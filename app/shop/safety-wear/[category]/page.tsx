@@ -21,6 +21,7 @@ interface Props {
     in_stock?: string;
     color?: string;
     size?: string;
+    gender?: string
     min_price?: string;
     max_price?: string;
   };
@@ -47,6 +48,7 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
   const inStock = searchParams.in_stock === "true";
   const color   = searchParams.color;
   const size    = searchParams.size;
+  const gender   = searchParams.gender;
   const minPrice = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
   const maxPrice = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
@@ -61,10 +63,10 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
     category?.name ||
     params.category.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
-  // Fetch filter options and products in parallel
-  let filterOptions = { colors: [], sizes: [], minPrice: 0, maxPrice: 500 } as {
+  let filterOptions = { colors: [], sizes: [], genders: [], minPrice: 0, maxPrice: 500 } as {
     colors: { name: string; hex: string }[];
     sizes: string[];
+    genders: string[];
     minPrice: number;
     maxPrice: number;
   };
@@ -81,9 +83,10 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
         in_stock: inStock || undefined,
         color,
         size,
+        gender,
         min_price: minPrice,
         max_price: maxPrice,
-        per_page: 24,
+        per_page: 12,
       }),
     ]);
   } catch { /* DB not connected — show empty state */ }
@@ -150,10 +153,12 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
               basePath={`/shop/safety-wear/${params.category}`}
               colors={filterOptions.colors}
               sizes={filterOptions.sizes}
+              genders={filterOptions.genders}
               minPrice={filterOptions.minPrice}
               maxPrice={filterOptions.maxPrice}
               currentColor={color}
               currentSize={size}
+              currentGender={gender}
               currentMinPrice={minPrice}
               currentMaxPrice={maxPrice}
             />

@@ -47,6 +47,7 @@ function mapProductRow(row: any, explicitSizeGuide?: any | null): Product {
       explicitSizeGuide !== undefined
         ? explicitSizeGuide
         : row.size_guides?.[0] || null,
+    enable_gender_options: row.enable_gender_options ?? false,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -84,6 +85,7 @@ export async function getProducts(
     max_price,
     color,
     size,
+    gender,
   } = filters;
 
   const categorySlug = school || category;
@@ -164,6 +166,11 @@ export async function getProducts(
     query = filteredProductIds !== null
       ? query.in("id", sizeIds.filter((id) => filteredProductIds!.includes(id)))
       : query.in("id", sizeIds);
+  }
+
+  // Gender filter
+  if (gender) {
+    query = query.eq("gender", gender);
   }
 
   switch (sort) {
@@ -319,14 +326,15 @@ export async function getCategoryFilterOptions(categorySlug: string): Promise<{
   sizes: string[];
   minPrice: number;
   maxPrice: number;
+  genders: string[];
 }> {
   const productIds = await getProductIdsByCategory(categorySlug);
 
   if (productIds.length === 0) {
-    return { colors: [], sizes: [], minPrice: 0, maxPrice: 0 };
+    return { colors: [], sizes: [], minPrice: 0, maxPrice: 0, genders: [] };
   }
 
-  const [swatchRes, variantRes, priceRes] = await Promise.all([
+  const [swatchRes, variantRes, priceRes, genderRes] = await Promise.all([
     supabase
       .from("product_color_swatches")
       .select("color_name, hex_code")
@@ -341,6 +349,12 @@ export async function getCategoryFilterOptions(categorySlug: string): Promise<{
       .select("price_range_min, price_range_max, regular_price")
       .in("id", productIds)
       .eq("published", true),
+    supabase
+      .from("products")
+      .select("gender")
+      .in("id", productIds)
+      .eq("published", true)
+      .not("gender", "is", null),
   ]);
 
   // Deduplicate colors by name (case-insensitive)
@@ -373,7 +387,15 @@ export async function getCategoryFilterOptions(categorySlug: string): Promise<{
   const minPrice = prices.length ? Math.floor(Math.min(...prices)) : 0;
   const maxPrice = prices.length ? Math.ceil(Math.max(...prices)) : 500;
 
-  return { colors, sizes, minPrice, maxPrice };
+  const genders = [
+    ...new Set(
+      (genderRes.data || [])
+        .map((p: { gender: string }) => p.gender)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
+  return { colors, sizes, minPrice, maxPrice, genders };
 }
 
 

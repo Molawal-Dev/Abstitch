@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/Toaster";
 import { formatPrice } from "@/lib/utils";
 import ColorSwatchSelector from "./ColorSwatchSelector";
 import SizeSelector from "./SizeSelector";
+import GenderSelector from "./GenderSelector";
 import SizeGuideModal from "./SizeGuideModal";
 import type { Product } from "@/types";
 
@@ -53,6 +54,7 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
     product.colors?.[0]?.name || null
   );
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [selectedQty, setSelectedQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -94,6 +96,11 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
       error("Please select a size before adding to cart.");
       return;
     }
+
+    if (product.enable_gender_options && !selectedGender) {
+      error("Please select Male or Female before adding to cart.");
+      return;
+    }
     
     const schoolCategoryName = schoolSlug
       ? product.category_names?.[
@@ -109,6 +116,7 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
       image: displayImages[0] || "",
       color: selectedColor,
       size: selectedSize,
+      gender: product.enable_gender_options ? selectedGender : null,
       price: displaySalePrice ?? displayPrice ?? 0,
       quantity: selectedQty,
       school: schoolCategoryName,
@@ -293,6 +301,14 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
                   : formatPrice(selectedSizeVariant.price)
                 }
               </p>
+            )}
+            {product.enable_gender_options && (
+              <div className="mt-4">
+                <GenderSelector
+                  selected={selectedGender}
+                  onChange={setSelectedGender}
+                />
+              </div>
             )}
           </div>
 

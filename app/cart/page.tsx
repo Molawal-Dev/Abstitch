@@ -40,7 +40,7 @@ export default function CartPage() {
             {/* Items */}
             <div className="lg:col-span-2 space-y-4">
               {cart.items.map((item) => {
-                const key = `${item.product_id}-${item.variant_id}`;
+                const key = `${item.product_id}-${item.variant_id}-${item.gender ?? ""}`;
                 return (
                   <div key={key} className="flex gap-4 p-4 bg-white rounded-xl border border-gray-100">
                     <Link href={`/product/${item.slug}`} className="flex-shrink-0">
@@ -73,13 +73,18 @@ export default function CartPage() {
                             Size: {item.size}
                           </span>
                         )}
+                        {item.gender && (
+                          <span className="font-sans text-xs text-gray-500">
+                            Gender: {item.gender}
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between mt-3">
                         {/* Qty */}
                         <div className="flex items-center border border-gray-200 rounded-md overflow-hidden">
                           <button
-                            onClick={() => updateQty(item.product_id, item.variant_id, item.quantity - 1)}
+                            onClick={() => updateQty(item.product_id, item.variant_id, item.quantity - 1, item.gender)}
                             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-sm font-bold transition-colors"
                           >
                             −
@@ -88,7 +93,7 @@ export default function CartPage() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQty(item.product_id, item.variant_id, item.quantity + 1)}
+                            onClick={() => updateQty(item.product_id, item.variant_id, item.quantity + 1, item.gender)}
                             className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 text-sm font-bold transition-colors"
                           >
                             +
@@ -109,7 +114,7 @@ export default function CartPage() {
                                 variant: "danger",
                                 icon: "delete",
                               });
-                              if (confirmed) removeItem(item.product_id, item.variant_id);
+                              if (confirmed) removeItem(item.product_id, item.variant_id, item.gender);
                             }}
                             className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
                             aria-label="Remove item"

@@ -15,10 +15,12 @@ interface ShopFiltersProps {
   basePath: string;
   colors?: ColorOption[];
   sizes?: string[];
+  genders?: string[];
   minPrice?: number;
   maxPrice?: number;
   currentColor?: string;
   currentSize?: string;
+  currentGender?: string;
   currentMinPrice?: number;
   currentMaxPrice?: number;
 }
@@ -30,7 +32,8 @@ const SORT_OPTIONS = [
   { value: "name_asc",   label: "Name A–Z" },
 ];
 
-const SIZE_ORDER = ["XXS","XS","S","M","L","XL","XXL","3XL","4XL"];
+const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
+const GENDER_ORDER = ["Boys", "Girls", "Unisex"];
 
 function sortSizes(sizes: string[]): string[] {
   const ordered: string[] = [];
@@ -46,16 +49,29 @@ function sortSizes(sizes: string[]): string[] {
   return [...ordered, ...numeric, ...other];
 }
 
+function sortGenders(genders: string[]): string[] {
+  return [...genders].sort((a, b) => {
+    const ai = GENDER_ORDER.indexOf(a);
+    const bi = GENDER_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+}
+
 export default function ShopFilters({
   currentSort,
   inStock,
   basePath,
   colors = [],
   sizes = [],
+  genders = [],
   minPrice = 0,
   maxPrice = 100,
   currentColor,
   currentSize,
+  currentGender,
   currentMinPrice,
   currentMaxPrice,
 }: ShopFiltersProps) {
@@ -102,10 +118,12 @@ export default function ShopFilters({
   );
 
   const sortedSizes = sortSizes(sizes);
+  const sortedGenders = sortGenders(genders);
 
   const hasActiveFilters =
     !!currentColor ||
     !!currentSize ||
+    !!currentGender ||
     currentMinPrice !== undefined ||
     currentMaxPrice !== undefined ||
     inStock ||
@@ -178,14 +196,13 @@ export default function ShopFilters({
           </div>
         </div>
 
-        {/* Price Range — only shown when the category has products with prices */}
+        {/* Price Range */}
         {maxPrice > minPrice && (
           <div>
             <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
               Price
             </p>
             <div className="relative h-5 flex items-center mb-2">
-              {/* Background track */}
               <div className="absolute left-0 right-0 h-1 rounded-full bg-gray-200" />
               <div
                 className="absolute h-1 rounded-full bg-burgundy-700 pointer-events-none"
@@ -194,7 +211,6 @@ export default function ShopFilters({
                   right: `${100 - ((priceRange[1] - minPrice) / (maxPrice - minPrice)) * 100}%`,
                 }}
               />
-              {/* Low thumb */}
               <input
                 type="range"
                 min={minPrice}
@@ -208,7 +224,6 @@ export default function ShopFilters({
                 }}
                 className={`${thumbClass} ${lowZIndex}`}
               />
-              {/* High thumb */}
               <input
                 type="range"
                 min={minPrice}
@@ -226,6 +241,32 @@ export default function ShopFilters({
             <div className="flex justify-between font-sans text-xs text-gray-500">
               <span>£{priceRange[0]}</span>
               <span>£{priceRange[1]}</span>
+            </div>
+          </div>
+        )}
+
+        {sortedGenders.length > 0 && (
+          <div>
+            <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">
+              Gender
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {sortedGenders.map((g) => {
+                const active = currentGender === g;
+                return (
+                  <button
+                    key={g}
+                    onClick={() => updateParam({ gender: active ? null : g })}
+                    className={`px-2.5 py-1 rounded font-sans text-xs font-medium border transition-colors ${
+                      active
+                        ? "bg-burgundy-700 text-white border-burgundy-700"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-burgundy-300"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

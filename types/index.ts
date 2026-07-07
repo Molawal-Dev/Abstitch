@@ -69,6 +69,7 @@ export interface Product {
   sizes: string[];
   variants: ProductVariant[];
   size_guide: SizeGuide | null;
+  enable_gender_options: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -81,6 +82,7 @@ export interface CartItem {
   image: string;
   color: string | null;
   size: string | null;
+  gender?: string | null;
   price: number;
   quantity: number;
   school?: string | null;
@@ -108,6 +110,7 @@ export interface OrderItem {
   variant_id: string | null;
   color: string | null;
   size: string | null;
+  gender?: string | null;
   image: string | null;
   price: number;
   quantity: number;
@@ -200,6 +203,7 @@ export interface ProductFilters {
   max_price?: number;
   color?: string;
   size?: string;
+  gender?: string;
   in_stock?: boolean;
   search?: string;
   page?: number;

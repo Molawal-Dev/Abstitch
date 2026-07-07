@@ -77,6 +77,7 @@ interface FormState {
   size_guide_rows: SizeGuideRow[];
   size_guide_notes: string;
   enable_size_guide: boolean;
+  enable_gender_options: boolean;
 }
 
 interface ProductFormProps { productId?: string }
@@ -120,7 +121,7 @@ export default function AdminProductForm({ productId }: ProductFormProps) {
   const [applyPriceToAll, setApplyPriceToAll] = useState("");
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     basic: true, media: true, pricing: true,
-    variants: true, categories: true, sizeGuide: false,
+    variants: true, categories: true, sizeGuide: false, genderOptions: false,
   });
 
   const nameRef = useRef<HTMLInputElement>(null);
@@ -146,6 +147,7 @@ export default function AdminProductForm({ productId }: ProductFormProps) {
     size_guide_rows: [],
     size_guide_notes: "",
     enable_size_guide: false,
+    enable_gender_options: false,
   });
 
   const setF = useCallback((key: keyof FormState, value: unknown) => {
@@ -226,6 +228,7 @@ export default function AdminProductForm({ productId }: ProductFormProps) {
         : [],
       size_guide_notes: sizeGuide?.notes || "",
       enable_size_guide: !!sizeGuide,
+      enable_gender_options: data.enable_gender_options ?? false,
     });
 
     if (sizeGuide) {
@@ -346,6 +349,7 @@ export default function AdminProductForm({ productId }: ProductFormProps) {
         stock_qty: stockQty,
         featured: form.featured,
         published: form.published,
+        enable_gender_options: form.enable_gender_options,
       };
 
       let productId_: string;
@@ -757,6 +761,24 @@ export default function AdminProductForm({ productId }: ProductFormProps) {
             </label>
           ))}
         </div>
+      </Section>
+
+      <Section id="genderOptions" title="Gender Options" openSections={openSections} toggleSection={toggleSection}>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.enable_gender_options}
+            onChange={(e) => setF("enable_gender_options", e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-burgundy-800 focus:ring-burgundy-800"
+          />
+          <span className="font-sans text-sm text-gray-700 font-medium">
+            Show Male / Female options on this product page
+          </span>
+        </label>
+        <p className="font-sans text-xs text-gray-400">
+          When enabled, customers must choose Male or Female before adding this product to cart.
+          Their choice is included in the order emails sent to you and the customer.
+        </p>
       </Section>
 
       <Section id="sizeGuide" title="Size Guide" openSections={openSections} toggleSection={toggleSection}>

@@ -14,6 +14,7 @@ const bodySchema = z.object({
       image: z.string(),
       color: z.string().nullable(),
       size: z.string().nullable(),
+      gender: z.string().nullable().optional(),
       price: z.number(),
       quantity: z.number().int().positive(),
       school: z.string().nullable().optional(),
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     const total = subtotal + shipping;
 
     const lineItemsDescription = cart.items
-      .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}`)
+      .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}${i.gender ? ` / ${i.gender}` : ""}`)
       .join(", ");
 
     const cartItemsJson = JSON.stringify(cart.items);

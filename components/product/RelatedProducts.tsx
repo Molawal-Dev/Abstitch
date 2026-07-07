@@ -31,6 +31,8 @@ function mapProduct(row: any) {
     stock_qty: row.stock_qty,
     featured: row.featured,
     published: row.published,
+    gender: row.gender,
+    enable_gender_options: row.enable_gender_options ?? false,
     colors: (row.product_color_swatches || []).map((s: any) => ({
       name: s.color_name,
       hex: s.hex_code,
@@ -50,8 +52,6 @@ function mapProduct(row: any) {
   };
 }
 
-// These are parent/generic category slugs — we skip them
-// and only use specific school/item categories for related products
 const GENERIC_SLUGS = new Set([
   "school-wear",
   "garments",
@@ -79,9 +79,6 @@ export default async function RelatedProducts({
   try {
     const supabase = createServerSupabaseClient();
 
-    // Build list of slugs to try, in priority order:
-    // 1. schoolSlug passed from product page (most specific)
-    // 2. All non-generic categoryIds the product belongs to
     const candidateSlugs: string[] = [];
 
     if (schoolSlug && !GENERIC_SLUGS.has(schoolSlug)) {
@@ -96,7 +93,6 @@ export default async function RelatedProducts({
 
     if (!candidateSlugs.length) return null;
 
-    // Look up all candidate category IDs at once
     const { data: catRows } = await supabase
       .from("categories")
       .select("id, slug")
@@ -104,7 +100,6 @@ export default async function RelatedProducts({
 
     if (!catRows?.length) return null;
 
-    // Try each category in priority order until we find related products
     let relatedProductIds: string[] = [];
     let usedCategorySlug = "";
 
@@ -127,7 +122,6 @@ export default async function RelatedProducts({
 
     if (!relatedProductIds.length) return null;
 
-    // Fetch the related products
     const { data } = await supabase
       .from("products")
       .select(`
@@ -144,7 +138,6 @@ export default async function RelatedProducts({
 
     if (!data?.length) return null;
 
-    // Find the category name for the section heading
     const { data: usedCat } = await supabase
       .from("categories")
       .select("name")

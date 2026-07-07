@@ -19,7 +19,7 @@ function renderOrderItemsRows(order: Order): string {
       const schoolLine = item.school
         ? `<br/><span style="color:#722F37;font-size:12px;font-weight:600;">School: ${item.school}</span>`
         : "";
-      const variantLine = [item.color, item.size]
+      const variantLine = [item.color, item.size, item.gender]
         .filter(Boolean)
         .join(" / ");
       return `
