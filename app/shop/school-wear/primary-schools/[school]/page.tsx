@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters from "@/components/shop/ShopFilters";
+import ProductSearch from "@/components/shop/ProductSearch";
 import { getCategoryFilterOptions } from "@/lib/supabase/products";
 import ShopPagination from "@/components/shop/ShopPagination";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -23,6 +24,7 @@ interface Props {
     gender?: string;
     min_price?: string;
     max_price?: string;
+    search?: string;
   };
 }
 
@@ -46,6 +48,7 @@ async function getSchoolProducts(
   gender?: string,
   minPrice?: number,
   maxPrice?: number,
+  search?: string,
 ) {
   try {
     const supabase = createServerSupabaseClient();
@@ -128,6 +131,8 @@ async function getSchoolProducts(
     if (inStock) query = query.eq("in_stock", true);
 
     if (gender) query = query.eq("gender", gender);
+
+    if (search) query = query.ilike("name", `%${search}%`);
 
     if (minPrice !== undefined) {
       query = query.or(
@@ -222,12 +227,12 @@ export default async function PrimarySchoolProductsPage({ params, searchParams }
   const color   = searchParams.color;
   const size    = searchParams.size;
   const gender  = searchParams.gender;  
+  const search  = searchParams.search;
   const minP    = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
   const maxP    = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
-  // Pass all filter params into getSchoolProducts
   const result = await getSchoolProducts(
-    params.school, page, sort, inStock, color, size, gender, minP, maxP
+    params.school, page, sort, inStock, color, size, gender, minP, maxP, search
   );
 
   if (!result || !result.category) notFound();
@@ -293,6 +298,25 @@ export default async function PrimarySchoolProductsPage({ params, searchParams }
           </aside>
 
           <div className="flex-1 min-w-0">
+            {/* Search bar */}
+            <div className="mb-5">
+              <ProductSearch
+                basePath={basePath}
+                currentSearch={search}
+                placeholder="Search products in this school…"
+              />
+            </div>
+
+            {total > 0 && (
+              <p className="font-sans text-sm text-gray-500 mb-4">
+                <span className="font-semibold text-gray-800">{total}</span>{" "}
+                product{total !== 1 ? "s" : ""} found
+                {search && (
+                  <span className="text-gray-400"> for &ldquo;{search}&rdquo;</span>
+                )}
+              </p>
+            )}
+
             {products.length > 0 ? (
               <>
                 <ProductGrid products={products} schoolSlug={category.slug} />

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import SiteLayout from "@/components/layout/SiteLayout";
 import ProductGrid from "@/components/shop/ProductGrid";
 import ShopFilters from "@/components/shop/ShopFilters";
+import ProductSearch from "@/components/shop/ProductSearch";
 import ShopPagination from "@/components/shop/ShopPagination";
 import { getCategoryBySlug } from "@/lib/supabase/categories";
 import { getProducts, getCategoryFilterOptions } from "@/lib/supabase/products";
@@ -24,6 +25,7 @@ interface Props {
     gender?: string
     min_price?: string;
     max_price?: string;
+    search?: string;
   };
 }
 
@@ -49,6 +51,7 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
   const color   = searchParams.color;
   const size    = searchParams.size;
   const gender   = searchParams.gender;
+  const search   = searchParams.search;
   const minPrice = searchParams.min_price ? parseInt(searchParams.min_price) : undefined;
   const maxPrice = searchParams.max_price ? parseInt(searchParams.max_price) : undefined;
 
@@ -84,6 +87,7 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
         color,
         size,
         gender,
+        search,
         min_price: minPrice,
         max_price: maxPrice,
         per_page: 12,
@@ -117,7 +121,6 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
               )}
             </div>
 
-            {/* Portwest logo — category pages only */}
             <div className="hidden md:flex flex-col items-end flex-shrink-0 mt-1">
               <div className="bg-white rounded-lg px-4 py-2.5 flex flex-col items-center gap-1">
                 <Image
@@ -166,6 +169,24 @@ export default async function SafetyWearCategoryPage({ params, searchParams }: P
 
           {/* Products */}
           <div className="flex-1 min-w-0">
+            {/* Search bar */}
+            <div className="mb-5">
+              <ProductSearch
+                basePath={`/shop/safety-wear/${params.category}`}
+                currentSearch={search}
+                placeholder="Search products in this category…"
+              />
+            </div>
+
+            {result.total > 0 && (
+              <p className="font-sans text-sm text-gray-500 mb-6">
+                <span className="font-semibold text-gray-800">{result.total}</span> products found
+                {search && (
+                  <span className="text-gray-400"> for &ldquo;{search}&rdquo;</span>
+                )}
+              </p>
+            )}
+
             {result.data.length > 0 ? (
               <>
                 <ProductGrid products={result.data} />

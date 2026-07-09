@@ -42,7 +42,7 @@ const SIZE_LIST: string[] = [
   '39"','40"','41"','42"','44"','46"','48"','50"',
   "XS","S","M","L","XL","2XL","3XL","4XL","5XL","6XL",
   "Kids at 1–2 years","Kids at 3–4 years","Kids at 5–6 years",
-  "Kids at 7–8 years","Kids at 9–10 years","Kids at 11–12 years",
+  "Kids at 7–8 years","Kids at 9–10 years","Kids at 11–12 years","Kids at 13–14 years",
   "Extra small – adults","Small – adults","Medium – adults",
   "Large – adults","Extra large – adults",
   "3/4","4","5","5/6","6","7","7/8","8","9","9/10",
