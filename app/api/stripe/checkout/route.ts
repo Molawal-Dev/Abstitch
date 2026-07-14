@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
     const total = subtotal + shipping;
 
     const lineItemsDescription = cart.items
-      .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}${i.gender ? ` / ${i.gender}` : ""}`)
-      .join(", ");
+  .map((i) => `${i.quantity}x ${i.name}${i.color ? ` (${i.color})` : ""}${i.size ? ` / ${i.size}` : ""}${i.gender ? ` / ${i.gender}` : ""}${i.school ? ` / ${i.school}` : ""}`)
+  .join(", ");
 
     const cartItemsJson = JSON.stringify(cart.items);
     const CHUNK_SIZE = 480;

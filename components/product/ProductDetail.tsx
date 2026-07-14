@@ -102,11 +102,23 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
       return;
     }
     
-    const schoolCategoryName = schoolSlug
-      ? product.category_names?.[
+    const NON_SCHOOL_SLUGS = new Set([
+      "school-wear", "garments", "primary-schools", "academy-schools",
+      "safety-wear", "bags", "blazers", "gifts", "gloves", "head-wear",
+      "hoodies", "shirts", "sweaters", "zoodies",
+      "flame-resistant", "high-visibility", "workwear", "footwear",
+      "hand-protection", "head-protection", "eye-protection", "accessories",
+    ]);
+
+    const schoolCategoryName = (() => {
+      if (schoolSlug) {
+        return product.category_names?.[
           product.categories.findIndex((c) => c === schoolSlug)
-        ] || null
-      : null;
+        ] || null;
+      }
+      const idx = product.categories.findIndex((c) => !NON_SCHOOL_SLUGS.has(c));
+      return idx !== -1 ? (product.category_names?.[idx] || null) : null;
+    })();
 
     addItem({
       product_id: product.id,
