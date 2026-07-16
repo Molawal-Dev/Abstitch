@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronRight, ShieldCheck, HeadphonesIcon, Truck } from "lucide-react";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { getSubcategoriesByParentSlug } from "@/lib/supabase/categories";
+import DownloadBrochureButton from "@/components/home/DownloadBrochureButton";
 import type { Category } from "@/types";
 
 export const revalidate = 60;
@@ -164,6 +165,7 @@ export default async function SafetyWearPage() {
           </div>
         </div>
       </div>
+      <DownloadBrochureButton />
     </SiteLayout>
   );
 }

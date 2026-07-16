@@ -19,6 +19,7 @@ interface NavItem {
 interface NavChild {
   label: string;
   href: string;
+  external?: boolean;
   children?: { label: string; href: string }[];
 }
 
@@ -36,7 +37,7 @@ const navItems: NavItem[] = [
           { label: "Academy Schools", href: "/shop/school-wear/academy-schools" },
         ],
       },
-      { label: "Garments", href: "https://abstitch.fullcollection.com/" },
+      { label: "Garments", href: "https://abstitch.fullcollection.com/", external: true },
       { label: "Safety Wear", href: "/shop/safety-wear" },
     ],
   },
@@ -204,6 +205,15 @@ export default function Header() {
                                     </div>
                                   </div>
                                 </div>
+                              ) : child.external ? (
+                                <a
+                                  href={child.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-burgundy-50 hover:text-burgundy-800 transition-colors"
+                                >
+                                  {child.label}
+                                </a>
                               ) : (
                                 <Link
                                   href={child.href}
@@ -338,12 +348,23 @@ export default function Header() {
                         )}
                         {item.children.map((child) => (
                           <div key={child.label}>
-                            <Link
-                              href={child.href}
-                              className="block px-3 py-2.5 text-sm text-gray-600 hover:text-burgundy-800 hover:bg-burgundy-50 rounded-md transition-colors font-medium"
-                            >
-                              {child.label}
-                            </Link>
+                            {child.external ? (
+                              <a
+                                href={child.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block px-3 py-2.5 text-sm text-gray-600 hover:text-burgundy-800 hover:bg-burgundy-50 rounded-md transition-colors font-medium"
+                              >
+                                {child.label}
+                              </a>
+                            ) : (
+                              <Link
+                                href={child.href}
+                                className="block px-3 py-2.5 text-sm text-gray-600 hover:text-burgundy-800 hover:bg-burgundy-50 rounded-md transition-colors font-medium"
+                              >
+                                {child.label}
+                              </Link>
+                            )}
                             {child.children && (
                               <div className="ml-4 space-y-1">
                                 {child.children.map((sub) => (

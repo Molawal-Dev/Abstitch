@@ -1,7 +1,6 @@
 import Image from "next/image";
 
-// TODO: set the destination URL for this banner once available.
-const BANNER_HREF = "https://abstitch.fullcollection.com/";
+const BANNER_HREF = "https://www.fullcollection.com/catalogue/299-product-use/353-safetywear-and-ppe?sort=recommended";
 
 export default function HomeVideoBanner() {
   const isLinked = BANNER_HREF.length > 0;
