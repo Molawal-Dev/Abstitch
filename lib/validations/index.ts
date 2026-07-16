@@ -20,6 +20,17 @@ export const orderEnquirySchema = z.object({
   additional_notes: z.string().max(2000).optional(),
 });
 
+export const brochureRequestSchema = z.object({
+  name: z.string().min(2, "Name is required").max(100),
+  company: z.string().min(2, "Company is required").max(150),
+  position: z.string().min(2, "Position is required").max(100),
+  email: z.string().email("Please enter a valid email address"),
+  number: z.string().min(7, "Please enter a valid phone number").max(20),
+  agree: z.boolean().refine((val) => val === true, {
+    message: "Please confirm you agree to provide your data",
+  }),
+});
+
 export const checkoutSchema = z
   .object({
     fulfilment: z.enum(["delivery", "collection"]),
@@ -91,3 +102,4 @@ export type OrderEnquiryValues = z.infer<typeof orderEnquirySchema>;
 export type CheckoutValues = z.infer<typeof checkoutSchema>;
 export type AdminLoginValues = z.infer<typeof adminLoginSchema>;
 export type ProductFormValues = z.infer<typeof productSchema>;
+export type BrochureRequestValues = z.infer<typeof brochureRequestSchema>;

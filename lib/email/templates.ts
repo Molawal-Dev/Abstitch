@@ -212,3 +212,39 @@ export async function sendOrderEnquiryEmail(data: {
     console.error("Failed to send order enquiry email:", err);
   }
 }
+
+export async function sendBrochureRequestEmail(data: {
+  name: string;
+  company: string;
+  position: string;
+  email: string;
+  number: string;
+}) {
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: ["sales@abstitch.co.uk"],
+      replyTo: data.email,
+      subject: `Brochure Download Request — ${data.name}`,
+      html: `
+        <div style="font-family: 'DM Sans', Arial, sans-serif; max-width:600px; margin:0 auto; color:#333;">
+          <div style="background:#722F37; padding:24px; text-align:center;">
+            <h1 style="color:#fff; margin:0; font-size:22px;">Abstitch — Brochure Download Request</h1>
+          </div>
+          <div style="padding:24px;">
+            <p><strong>Name:</strong> ${data.name}</p>
+            <p><strong>Company:</strong> ${data.company}</p>
+            <p><strong>Position:</strong> ${data.position}</p>
+            <p><strong>Email:</strong> ${data.email}</p>
+            <p><strong>Number:</strong> ${data.number}</p>
+            <p style="font-size:12px; color:#999; margin-top:16px;">
+              This person agreed to provide their data before downloading the brochure.
+            </p>
+          </div>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("Failed to send brochure request email:", err);
+  }
+}

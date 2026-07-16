@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
           { label: "Academy Schools", href: "/shop/school-wear/academy-schools" },
         ],
       },
-      //{ label: "Garments", href: "/shop/garments" },
+      { label: "Garments", href: "https://abstitch.fullcollection.com/" },
       { label: "Safety Wear", href: "/shop/safety-wear" },
     ],
   },

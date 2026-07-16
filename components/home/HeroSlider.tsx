@@ -34,11 +34,12 @@ interface Slide {
   watermarkFontSize: string;
   watermarkColor: string;
   description: string;
-  cta: { label: string; href: string };
+  cta: { label: string; href: string; external?: boolean };
   leftBg: string;
   rightBg: string;
   image: string;
   partnerBadge?: "portwest";
+  contentTop: string;
 }
 
 const SLIDES: Slide[] = [
@@ -57,6 +58,7 @@ const SLIDES: Slide[] = [
     leftBg: "#7B1118",
     rightBg: "#0D0714",
     image: "/home-banners/school-image1.png",
+    contentTop: "13%",
   },
   {
     id: "ppe",
@@ -73,6 +75,7 @@ const SLIDES: Slide[] = [
     leftBg: "#1A3D58",
     rightBg: "#0A1726",
     image: "/home-banners/ppe-image.png",
+    contentTop: "13%",
     partnerBadge: "portwest",
   },
   {
@@ -90,6 +93,28 @@ const SLIDES: Slide[] = [
     leftBg: "#680D10",
     rightBg: "#1A0305",
     image: "/home-banners/embroidery-image.png",
+    contentTop: "13%",
+  },
+  {
+    id: "garments",
+    seasonTag: "SPRING / SUMMER 2026",
+    tag: "TOP DEALS",
+    headingLine1: "GARMENTS",
+    headingLine2: "",
+    watermarkLines: ["Garments"],
+    watermarkFontSize: "154px",
+    watermarkColor: "rgba(0,0,0,0.15)",
+    description:
+      "Quality garments for every need. Explore our full collection of customisable workwear, casualwear & more.",
+    cta: {
+      label: "EXPLORE THE COLLECTION",
+      href: "https://abstitch.fullcollection.com",
+      external: true,
+    },
+    leftBg: "#5C0F14",
+    rightBg: "#0D0714",
+    image: "/home-banners/garments-image.png",
+    contentTop: "22%",
   },
 ];
 
@@ -214,7 +239,6 @@ export default function HeroSlider() {
   const slide = SLIDES[current];
 
   return (
-    // FIX 1: height moved to .hero-slider-section CSS class (604px → 520px tablet → 420px mobile)
     <section
       className="hero-slider-section relative w-full overflow-hidden select-none"
       aria-label="Hero banner"
@@ -370,7 +394,7 @@ export default function HeroSlider() {
         className="hero-content-area absolute z-30 flex flex-col"
         style={{
           left: "clamp(80px, 18.5%, 220px)",
-          top: "12%",
+          top: slide.contentTop,
           width: "min(480px, 42vw)",
         }}
       >
@@ -419,8 +443,12 @@ export default function HeroSlider() {
             }}
           >
             {slide.headingLine1}
-            <br />
-            {slide.headingLine2}
+            {slide.headingLine2 && (
+              <>
+                <br />
+                {slide.headingLine2}
+              </>
+            )}
           </h1>
         </div>
 
@@ -458,24 +486,47 @@ export default function HeroSlider() {
           key={`cta-${animKey}`}
           style={{ ...anim("revFadeInUp", "0.5s", "740ms") }}
         >
-          <Link
-            href={slide.cta.href}
-            className="bg-white/15 border border-white/25 backdrop-blur-xl rounded-full hover:bg-white/20 transition-all px-4 py-2"
-            style={{
-              fontFamily: MONTSERRAT,
-              fontSize: "14px",
-              fontWeight: 400,
-              color: "white",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              letterSpacing: "0px",
-            }}
-          >
-            {slide.cta.label}{" "}
-            <span style={{ fontSize: "20px", lineHeight: 1 }}>→</span>
-          </Link>
+          {slide.cta.external ? (
+            <a
+              href={slide.cta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white/15 border border-white/25 backdrop-blur-xl rounded-full hover:bg-white/20 transition-all px-4 py-2"
+              style={{
+                fontFamily: MONTSERRAT,
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "white",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                letterSpacing: "0px",
+              }}
+            >
+              {slide.cta.label}{" "}
+              <span style={{ fontSize: "20px", lineHeight: 1 }}>→</span>
+            </a>
+          ) : (
+            <Link
+              href={slide.cta.href}
+              className="bg-white/15 border border-white/25 backdrop-blur-xl rounded-full hover:bg-white/20 transition-all px-4 py-2"
+              style={{
+                fontFamily: MONTSERRAT,
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "white",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                letterSpacing: "0px",
+              }}
+            >
+              {slide.cta.label}{" "}
+              <span style={{ fontSize: "20px", lineHeight: 1 }}>→</span>
+            </Link>
+          )}
         </div>
       </div>
 

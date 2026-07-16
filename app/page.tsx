@@ -7,6 +7,9 @@ import HomeServicesSection from "@/components/home/HomeServicesSection";
 import HomeWhyUsSection from "@/components/home/HomeWhyUsSection";
 import HomeCTABanner from "@/components/home/HomeCTABanner";
 import HomeCategorySlideshow from "@/components/home/HomeCategorySlideshow";
+import HomeVideoSection from "@/components/home/HomeVideoSection";
+import HomeVideoBanner from "@/components/home/HomeVideoBanner";
+import DownloadBrochureButton from "@/components/home/DownloadBrochureButton";
 
 export const metadata: Metadata = {
   title: "Abstitch | School Wear, Embroidery & Printing — Aberdeen",
@@ -19,11 +22,14 @@ export default function HomePage() {
     <SiteLayout>
       <HeroSlider />
       <HomeSchoolWearSection />
+      <HomeVideoSection />
+      <HomeVideoBanner />
       <HomeFeaturedSection />
       <HomeCategorySlideshow />
       <HomeServicesSection />
       <HomeWhyUsSection />
       <HomeCTABanner />
+      <DownloadBrochureButton />
     </SiteLayout>
   );
 }

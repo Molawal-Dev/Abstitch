@@ -59,7 +59,7 @@ export default function Footer() {
               { label: "Home", href: "/" },
               { label: "About Abstitch", href: "/about" },
               { label: "School Wear", href: "/shop/school-wear" },
-              { label: "Garments", href: "/shop/garments" },
+              { label: "Garments", href: "https://abstitch.fullcollection.com/" },
               { label: "Our Services", href: "/services" },
               { label: "Contact Us", href: "/contact" },
             ].map((link) => (
