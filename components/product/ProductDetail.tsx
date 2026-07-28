@@ -21,6 +21,8 @@ import ColorSwatchSelector from "./ColorSwatchSelector";
 import SizeSelector from "./SizeSelector";
 import GenderSelector from "./GenderSelector";
 import SizeGuideModal from "./SizeGuideModal";
+import FittingBanner from "./FittingBanner";
+import { getFittingBanner } from "@/lib/fittingBanners";
 import type { Product } from "@/types";
 
 interface ProductDetailProps {
@@ -155,6 +157,8 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
 
   const hasSizeGuide = !!product.size_guide;
 
+  const fittingBanner = getFittingBanner(product.categories);
+
   return (
     <div>
       <nav className="flex items-center gap-1.5 text-xs text-gray-500 font-sans mb-8 flex-wrap">
@@ -274,6 +278,8 @@ export default function ProductDetail({ product, schoolSlug }: ProductDetailProp
               dangerouslySetInnerHTML={{ __html: normaliseRichHtml(product.short_description) }}
             />
           )}
+
+          {fittingBanner && <FittingBanner banner={fittingBanner} />}
 
           {product.colors && product.colors.length > 0 && (
             <div className="mb-5">

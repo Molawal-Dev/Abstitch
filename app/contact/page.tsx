@@ -250,6 +250,31 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+      
+      {/* Store location map */}
+      <section id="visit-us" className="pb-14 scroll-mt-24">
+        <div className="container-custom">
+          <div className="mb-6">
+            <h2 className="font-serif text-2xl font-bold text-gray-900 mb-1">
+              Visit Our Shop
+            </h2>
+            <p className="font-sans text-sm text-gray-500">
+              35 Ann Street, Aberdeen, UK. AB25 3LH
+            </p>
+          </div>
+          <div className="rounded-xl overflow-hidden border border-gray-100 shadow-sm">
+            <iframe
+              title="Abstitch location on Google Maps"
+              src="https://www.google.com/maps?q=35+Ann+Street,+Aberdeen,+AB25+3LH,+UK&output=embed"
+              width="100%"
+              height="420"
+              style={{ border: 0 }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      </section>
     </SiteLayout>
   );
 }

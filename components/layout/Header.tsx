@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingCart, Menu, X, ChevronDown, Phone, Mail, Heart } from "lucide-react";
-import SchoolSearch from "@/components/layout/SchoolSearch";
+import ProductSearch from "@/components/layout/ProductSearch";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
@@ -247,7 +247,7 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
-              <SchoolSearch />
+              <ProductSearch />
 
               <Link
                 href="/wishlist"
