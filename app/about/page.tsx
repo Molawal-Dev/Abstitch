@@ -6,7 +6,7 @@ import { Award, Users, Star, Shield } from "lucide-react";
 export const metadata: Metadata = {
   title: "About Abstitch | Aberdeen's School Wear & Embroidery Specialists",
   description:
-    "Learn about Abstitch — Aberdeen's most trusted school wear supplier for over 25 years. Quality embroidery, printing, and uniforms across Scotland.",
+    "Learn about Abstitch — Aberdeen's most trusted school wear supplier for 52 years. Quality embroidery, printing, and uniforms across Scotland.",
 };
 
 export default function AboutPage() {
@@ -110,11 +110,13 @@ export default function AboutPage() {
             Ready to Work With Us?
           </h2>
           <p className="font-sans text-gray-500 mb-8">
-            Whether you need uniforms for a single child or 500 pupils, we&apos;re here to help.
+            Whether you need school uniforms, PPE, workwear, or custom branding solutions, we&apos;re here to help.
             Get in touch or browse our full product range today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/shop/school-wear" className="btn-primary">Browse School Wear</Link>
+            <Link href="/#all-products" className="btn-primary">
+              Browse Product Range
+            </Link>
             <Link href="/contact" className="btn-outline">Contact Us</Link>
           </div>
         </div>

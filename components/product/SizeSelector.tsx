@@ -1,61 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { sortSizes } from "@/lib/utils/sortSizes";
 
 interface SizeSelectorProps {
   sizes: string[];
   selected: string | null;
   onChange: (size: string) => void;
-}
-
-const SIZE_ORDER = [
-  "Kids at 1–2 years",
-  "Kids at 3–4 years",
-  "Kids at 5–6 years",
-  "Kids at 7–8 years",
-  "Kids at 9–10 years",
-  "Kids at 9–11 years",
-  "Kids at 11–12 years",
-  "Kids at 12–13 years",
-  "Kids at 12–14 years",
-  "Kids at 13–14 years",
-  "Extra small – adults",
-  "Small – adults",
-  "Medium – adults",
-  "Large – adults",
-  "Extra large – adults",
-  "XXL",
-  "XXXL",
-  "XS",
-  "S",
-  "M",
-  "L",
-  "XL",
-  "2XL",
-  "3XL",
-  "4XL",
-  "5XL",
-  "6XL",
-];
-
-function sortSizes(sizes: string[]): string[] {
-  return [...sizes].sort((a, b) => {
-    const ai = SIZE_ORDER.findIndex(
-      (s) => s.toLowerCase() === a.toLowerCase()
-    );
-    const bi = SIZE_ORDER.findIndex(
-      (s) => s.toLowerCase() === b.toLowerCase()
-    );
-    if (ai !== -1 && bi !== -1) return ai - bi;
-    if (ai !== -1) return -1;
-    if (bi !== -1) return 1;
-
-    const aNum = Number(a);
-    const bNum = Number(b);
-    if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
-
-    return a.localeCompare(b);
-  });
 }
 
 export default function SizeSelector({

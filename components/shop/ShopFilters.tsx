@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { SlidersHorizontal, RotateCcw } from "lucide-react";
+import { sortSizes } from "@/lib/utils/sortSizes";
 
 interface ColorOption {
   name: string;
@@ -32,22 +33,7 @@ const SORT_OPTIONS = [
   { value: "name_asc",   label: "Name A–Z" },
 ];
 
-const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
 const GENDER_ORDER = ["Boys", "Girls", "Unisex"];
-
-function sortSizes(sizes: string[]): string[] {
-  const ordered: string[] = [];
-  const numeric: string[] = [];
-  const other: string[] = [];
-  for (const s of sizes) {
-    if (SIZE_ORDER.includes(s.toUpperCase())) ordered.push(s);
-    else if (/^\d/.test(s)) numeric.push(s);
-    else other.push(s);
-  }
-  ordered.sort((a, b) => SIZE_ORDER.indexOf(a.toUpperCase()) - SIZE_ORDER.indexOf(b.toUpperCase()));
-  numeric.sort((a, b) => parseFloat(a) - parseFloat(b));
-  return [...ordered, ...numeric, ...other];
-}
 
 function sortGenders(genders: string[]): string[] {
   return [...genders].sort((a, b) => {

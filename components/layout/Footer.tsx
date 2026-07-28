@@ -21,7 +21,7 @@ export default function Footer() {
           </div>
           <p className="text-sm leading-relaxed text-gray-400">
             Aberdeen&apos;s trusted supplier of school uniforms, embroidery,
-            and workwear for over 25 years. Quality you can rely on, service
+            and workwear for 52 years. Quality you can rely on, service
             you can count on.
           </p>
           <div className="flex items-center gap-3 mt-5">
@@ -163,7 +163,7 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500">Secure payments</span>
               <div className="flex gap-1.5">
-                {["VISA", "MC", "AMEX"].map((c) => (
+                {["VISA", "MC"].map((c) => (
                   <span
                     key={c}
                     className="text-[9px] bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded font-bold tracking-wide"

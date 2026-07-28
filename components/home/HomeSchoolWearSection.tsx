@@ -45,7 +45,7 @@ const categories: CategoryCard[] = [
 
 export default function HomeSchoolWearSection() {
   return (
-    <section className="py-16 md:py-20 bg-cream-50">
+    <section className="py-16 md:py-20 bg-cream-50" id="all-products">
       <div className="container-custom">
         <div className="text-center mb-10">
           <p className="font-sans text-xs tracking-[0.3em] uppercase text-burgundy-700 mb-2">
